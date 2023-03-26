@@ -35,7 +35,29 @@ class Users(db.Model, UserMixin):
     def __repr__(self):
         return str(self.username)
 
+# ...
 
+class Cases(db.Model):
+
+    __tablename__ = 'Cases'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    case_name = db.Column(db.String(100), nullable=False)
+    assigned_to = db.Column(db.String(100), nullable=False)
+    ticket_id = db.Column(db.String(80), nullable=True)
+    case_priority = db.Column(db.Integer)
+    description = db.Column(db.Text)
+    virustotal = db.Column(db.Boolean, default=True)
+    anyrun = db.Column(db.Boolean, default=False)
+    hybridanalysis = db.Column(db.Boolean, default=False)
+    alienvault_otx = db.Column(db.Boolean, default=False)
+    urlscan = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime(timezone=True),server_default=db.func.now())
+
+    def __repr__(self):
+        return f'<Cases {self.case_name}>'
+    
 @login_manager.user_loader
 def user_loader(id):
     return Users.query.filter_by(id=id).first()
