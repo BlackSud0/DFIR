@@ -46,7 +46,7 @@ class Cases(db.Model):
     case_name = db.Column(db.String(100), nullable=False)
     assigned_to = db.Column(db.String(100), nullable=False)
     ticket_id = db.Column(db.String(80), nullable=True)
-    case_priority = db.Column(db.Integer)
+    case_priority = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text)
     virustotal = db.Column(db.Boolean, default=True)
     anyrun = db.Column(db.Boolean, default=False)
