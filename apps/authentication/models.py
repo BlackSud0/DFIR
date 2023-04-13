@@ -51,12 +51,30 @@ class Cases(db.Model):
     virustotal = db.Column(db.Boolean, default=True)
     anyrun = db.Column(db.Boolean, default=False)
     hybridanalysis = db.Column(db.Boolean, default=False)
+    malwarebazaar = db.Column(db.Boolean, default=False)
     alienvault_otx = db.Column(db.Boolean, default=False)
     urlscan = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime(timezone=True),server_default=db.func.now())
 
     def __repr__(self):
         return f'<Cases {self.case_name}>'
+
+class APIs(db.Model):
+
+    __tablename__ = 'APIs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    VTAPI = db.Column(db.String(100), nullable=True) # Virustotal API
+    HBAPI = db.Column(db.String(100), nullable=True) # Hybrid Analysis API
+    MBAPI = db.Column(db.String(100), nullable=True) # Malware Bazaar
+    ARAPI = db.Column(db.String(100), nullable=True) # ANYRUN API
+    URLAPI = db.Column(db.String(100), nullable=True) # URLHous API
+    OTXAPI = db.Column(db.String(100), nullable=True) # Alienvault OTX API
+    created_at = db.Column(db.DateTime(timezone=True),server_default=db.func.now())
+
+    def __repr__(self):
+        return f'<APIs {self.case_name}>'
     
 @login_manager.user_loader
 def user_loader(id):

@@ -9,8 +9,8 @@ from apps.home import blueprint
 from flask import request, render_template, redirect, url_for, abort
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
-from apps.authentication.models import Cases
-from apps.home.forms import CreateCaseForm
+from apps.authentication.models import Cases, APIs
+from apps.home.forms import CreateCaseForm, CreateSettingsForm
 
 
 @blueprint.route('/index')
@@ -66,6 +66,7 @@ def newcase():
         case.virustotal = True if request.form.get('virustotal') == "y" else False
         case.anyrun = True if request.form.get('anyrun') == "y" else False
         case.hybridanalysis = True if request.form.get('hybridanalysis') == "y" else False
+        case.malwarebazaar = True if request.form.get('malwarebazaar') == "y" else False
         case.alienvault_otx = True if request.form.get('alienvault_otx') == "y" else False
         case.urlscan = True if request.form.get('urlscan') == "y" else False
 
@@ -82,6 +83,48 @@ def cases(case_id):
     case = Cases.query.filter_by(id=case_id).first_or_404()
     return render_template("home/case.html", case=case)
 
+
+@blueprint.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    Old_API = APIs.query.filter_by(user_id=current_user.get_id()).first()
+    create_settings_form = CreateSettingsForm(request.form)
+    if request.method == "POST":
+
+        # Check API exists
+        if Old_API:
+            Old_API.VTAPI = request.form.get('VTAPI')
+            Old_API.HBAPI = request.form.get('HBAPI')
+            Old_API.MBAPI = request.form.get('MBAPI')
+            Old_API.ARAPI = request.form.get('ARAPI')
+            Old_API.URLAPI = request.form.get('URLAPI')
+            Old_API.OTXAPI = request.form.get('OTXAPI')
+
+            db.session.add(Old_API)
+            db.session.commit()
+            return render_template('home/settings.html',
+                                   msg='Settings updated successfully',
+                                   form=create_settings_form,
+                                   API=Old_API)
+        
+        API = APIs(user_id=current_user.get_id())
+        # Anti-Malware API
+        API.VTAPI = request.form.get('VTAPI')
+        API.HBAPI = request.form.get('HBAPI')
+        API.MBAPI = request.form.get('MBAPI')
+        API.ARAPI = request.form.get('ARAPI')
+        API.URLAPI = request.form.get('URLAPI')
+        API.OTXAPI = request.form.get('OTXAPI')
+
+        db.session.add(API)
+        db.session.commit()
+        return render_template('home/settings.html',
+                                   msg='Settings updated successfully',
+                                   form=create_settings_form,
+                                   API=API)
+
+    else:
+        return render_template('home/settings.html', form=create_settings_form, API=Old_API)
 
 # Helper - Extract current page name from request
 def get_segment(request):

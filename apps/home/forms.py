@@ -24,6 +24,19 @@ class CreateCaseForm(FlaskForm):
     virustotal = BooleanField("VirusTotal", validators=[DataRequired()])
     anyrun = BooleanField("AnyRun", validators=[Optional()])
     hybridanalysis = BooleanField("Hybrid Analysis", validators=[Optional()])
+    malwarebazaar = BooleanField("Malware Bazaar", validators=[Optional()])
     alienvault_otx = BooleanField("AlienVault OTX", validators=[Optional()])
     urlscan = BooleanField("URLHaus & URLScan", validators=[Optional()])
     submit = SubmitField("Create Now")
+
+
+# Create Case Form
+
+class CreateSettingsForm(FlaskForm):
+    VTAPI = StringField('VirusTotal API', validators=[Optional()])
+    HBAPI = StringField('Hybrid Analysis API', validators=[Optional()])
+    MBAPI = StringField('Malware Bazaar API', validators=[Optional()])
+    ARAPI = StringField('AnyRun API', validators=[Optional()])
+    URLAPI = StringField('URLHaus API', validators=[Optional()])
+    OTXAPI = StringField('AlienVault OTX API', validators=[Optional()])
+    submit = SubmitField("Update Now")
