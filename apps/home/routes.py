@@ -16,8 +16,8 @@ from apps.home.forms import CreateCaseForm, CreateSettingsForm
 @blueprint.route('/index')
 @login_required
 def index():
-
-    return render_template('home/index.html', segment='index')
+    cases_count = Cases.query.count()
+    return render_template('home/index.html', cases_count=cases_count, segment='index')
 
 
 @blueprint.route('/<template>')
@@ -83,6 +83,15 @@ def cases(case_id):
     case = Cases.query.filter_by(id=case_id).first_or_404()
     return render_template("home/case.html", case=case)
 
+@blueprint.route('/allcases')
+@login_required
+def allcases():
+    allcases = (
+        Cases.query.filter_by(user_id=current_user.get_id())
+        .order_by(Cases.id.desc())
+        .paginate(per_page=50)
+    )
+    return render_template("home/allcases.html", cases=allcases)
 
 @blueprint.route('/settings', methods=['GET', 'POST'])
 @login_required

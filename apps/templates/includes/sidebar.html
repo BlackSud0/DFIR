@@ -18,8 +18,12 @@
 									class="feather icon-plus-circle"></i></span><span class="pcoded-mtext">New Case</span></a>
 					</li>
 					<li class="nav-item">
-						<a href="/icon-feather.html" class="nav-link "><span class="pcoded-micon"><i
+						<a href="{{ url_for('home_blueprint.allcases') }}" class="nav-link "><span class="pcoded-micon"><i
 									class="feather icon-grid"></i></span><span class="pcoded-mtext">All Cases</span></a>
+					</li>
+					<li class="nav-item">
+						<a href="/icon-feather.html" class="nav-link "><span class="pcoded-micon"><i
+									class="feather icon-slack"></i></span><span class="pcoded-mtext">All Submissions</span></a>
 					</li>
 					<li class="nav-item pcoded-menu-caption">
 						<label>Reporting</label>
@@ -36,7 +40,7 @@
 									class="feather icon-settings"></i></span><span class="pcoded-mtext">Settings</span></a>
 					</li>
 					<li class="nav-item">
-						<a href="/map-google.html" class="nav-link "><span class="pcoded-micon"><i class="feather icon-power"></i></span><span
+						<a href="{{ url_for('authentication_blueprint.logout') }}" class="nav-link "><span class="pcoded-micon"><i class="feather icon-power"></i></span><span
 								class="pcoded-mtext">Logout</span></a>
 					</li>
 				
