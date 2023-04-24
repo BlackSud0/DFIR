@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Apex Charts {% endblock %} 
+{% block title %} Total Cases {% endblock %} 
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}
@@ -82,13 +82,35 @@
                                                 <td class="text-center">
                                                     <i class="feather icon-eye text-primary m-r-5 f-20"></i>
                                                     <a href="{{ url_for('home_blueprint.cases',case_id=case.id) }}"><i class="feather icon-edit-2 text-success m-r-5 f-20"></i></a>
-                                                    <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
+                                                    <a href="{{ url_for('home_blueprint.delete_case',case_id=case.id) }}"><i class="feather icon-trash-2 text-danger m-r-5 f-20"></i></a>
                                                 </td>
                                             </tr>
                                             {% endfor %}
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                            <hr class="m-0">
+                            <div class="px-3 py-2 float-right" style="display: flex !important;">
+                                {% if cases.pages > 1 %}
+                                    {% if cases.page != 1 %}
+                                        <a href="{{ prev_page }}" class="form-control w-3 mr-1">
+                                            <i class="feather icon-chevron-left m-r-5 f-20"></i>
+                                        </a>
+                                    {% endif %}
+                                    <select class="form-control w-4" onchange="location = '?page=' + this.value;">
+                                        {% for page in range(1, cases.pages + 1) %}
+                                        <option {% if cases.page == page %}selected{% endif %}>{{ page }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if cases.next_num %}
+                                        <a href="{{ next_page }}" class="form-control w-3 ml-1">
+                                            <i class="feather icon-chevron-right m-r-5 f-20"></i>
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="px-3 pb-3 float-right">There is no pagination yet</div>
+                                {%endif%}
                             </div>
                         </div>
                     </div>

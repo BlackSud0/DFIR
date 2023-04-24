@@ -83,6 +83,22 @@ def cases(case_id):
     case = Cases.query.filter_by(id=case_id).first_or_404()
     return render_template("home/case.html", case=case)
 
+@blueprint.route('/cases/delete/<int:case_id>')
+@login_required
+def delete_case(case_id):
+    case = Cases.query.filter_by(id=case_id, user_id=current_user.get_id()).first_or_404()
+    # Admins should not be able to delete themselves
+    if case:
+        # Notifications.query.filter_by(user_id=user_id).delete()
+        # Awards.query.filter_by(user_id=user_id).delete()
+        # Submissions.query.filter_by(user_id=user_id).delete()
+        Cases.query.filter_by(id=case_id).delete()
+        db.session.commit()
+        db.session.close()
+        return redirect(url_for('home_blueprint.allcases'))
+    
+    return redirect(url_for('home_blueprint.allcases'))
+
 @blueprint.route('/allcases')
 @login_required
 def allcases():
@@ -91,7 +107,16 @@ def allcases():
         .order_by(Cases.id.desc())
         .paginate(per_page=50)
     )
-    return render_template("home/allcases.html", cases=allcases)
+
+    args = dict(request.args)
+    args.pop("page", 1)
+
+    return render_template(
+        "home/allcases.html", 
+        cases=allcases,
+        prev_page=url_for(request.endpoint, page=allcases.prev_num, **args),
+        next_page=url_for(request.endpoint, page=allcases.next_num, **args),
+    )
 
 @blueprint.route('/settings', methods=['GET', 'POST'])
 @login_required
