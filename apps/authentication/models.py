@@ -74,7 +74,27 @@ class APIs(db.Model):
     created_at = db.Column(db.DateTime(timezone=True),server_default=db.func.now())
 
     def __repr__(self):
-        return f'<APIs {self.case_name}>'
+        return f'<APIs {self.created_at}>'
+
+class FileHash(db.Model):
+
+    __tablename__ = 'FileHash'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    case_id = db.Column(db.Integer, nullable=False)
+    analysis_id = db.Column(db.String(200), nullable=True)
+    file_name = db.Column(db.String(100), nullable=True)
+    sha256 = db.Column(db.String(100), nullable=True)
+    sha1 = db.Column(db.String(100), nullable=True)
+    md5 = db.Column(db.String(100), nullable=True)
+    size = db.Column(db.Integer, nullable=True)
+    type = db.Column(db.String(100), nullable=True)
+    data_type = db.Column(db.String(100), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True),server_default=db.func.now())
+
+    def __repr__(self):
+        return f'<FileHash {self.file_name}>'
     
 @login_manager.user_loader
 def user_loader(id):

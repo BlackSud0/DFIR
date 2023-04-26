@@ -4,7 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectField, BooleanField, SubmitField
+from wtforms import StringField, TextAreaField, SelectField, BooleanField, SubmitField, FileField
 from wtforms.validators import DataRequired, Optional
 
 # Create Case Form
@@ -40,3 +40,9 @@ class CreateSettingsForm(FlaskForm):
     URLAPI = StringField('URLHaus API', validators=[Optional()])
     OTXAPI = StringField('AlienVault OTX API', validators=[Optional()])
     submit = SubmitField("Update Now")
+
+class SubmissionForm(FlaskForm):
+    file = FileField("Malware File", validators=[DataRequired()])
+    hash = StringField('Malware hash', validators=[DataRequired()])
+    url = StringField('Suspicious URL, IP', validators=[DataRequired()])
+    pcap = FileField("PCAP File", validators=[DataRequired()])

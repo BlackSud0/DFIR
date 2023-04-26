@@ -6,11 +6,11 @@ Copyright (c) 2019 - present AppSeed.us
 from apps import db
 
 from apps.home import blueprint
-from flask import request, render_template, redirect, url_for, abort
+from flask import request, render_template, redirect, url_for
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
-from apps.authentication.models import Cases, APIs
-from apps.home.forms import CreateCaseForm, CreateSettingsForm
+from apps.authentication.models import Cases, APIs, FileHash
+from apps.home.forms import CreateCaseForm, CreateSettingsForm, SubmissionForm
 
 
 @blueprint.route('/index')
@@ -73,15 +73,46 @@ def newcase():
         db.session.add(case)
         db.session.commit()
         return redirect(url_for('home_blueprint.cases',case_id=case.id))
-
     else:
         return render_template('home/newcase.html', form=create_case_form)
 
-@blueprint.route('/cases/<int:case_id>')
+@blueprint.route('/cases/<int:case_id>', methods=['GET', 'POST'])
 @login_required
 def cases(case_id):
-    case = Cases.query.filter_by(id=case_id).first_or_404()
-    return render_template("home/case.html", case=case)
+    case = Cases.query.filter_by(id=case_id, user_id=current_user.get_id()).first_or_404()
+    submission_form = SubmissionForm(request.form)
+
+    if request.method == "POST":
+        if 'submit_file' in request.form:
+            return render_template(
+                "home/case.html",
+                case=case,
+                form=submission_form,
+            )
+        elif 'submit_hash' in request.form:
+            return render_template(
+                "home/case.html",
+                case=case,
+                form=submission_form,
+            )
+        elif 'submit_url' in request.form:
+            return render_template(
+                "home/case.html",
+                case=case,
+                form=submission_form,
+            )
+        elif 'submit_pcap' in request.form:
+            return render_template(
+                "home/case.html",
+                case=case,
+                form=submission_form,
+            )
+    else:
+        return render_template(
+            "home/case.html",
+            case=case,
+            form=submission_form,
+        )
 
 @blueprint.route('/cases/delete/<int:case_id>')
 @login_required
@@ -91,32 +122,24 @@ def delete_case(case_id):
     if case:
         # Notifications.query.filter_by(user_id=user_id).delete()
         # Awards.query.filter_by(user_id=user_id).delete()
-        # Submissions.query.filter_by(user_id=user_id).delete()
+        FileHash.query.filter_by(case_id=case_id).delete()
         Cases.query.filter_by(id=case_id).delete()
         db.session.commit()
-        db.session.close()
-        return redirect(url_for('home_blueprint.allcases'))
+
+        allcases = Cases.query.filter_by(user_id=current_user.get_id()).order_by(Cases.id.desc())
+        return render_template(
+            "home/allcases.html", 
+            msg='Case deleted successfully!', 
+            cases=allcases
+        )
     
     return redirect(url_for('home_blueprint.allcases'))
 
 @blueprint.route('/allcases')
 @login_required
 def allcases():
-    allcases = (
-        Cases.query.filter_by(user_id=current_user.get_id())
-        .order_by(Cases.id.desc())
-        .paginate(per_page=50)
-    )
-
-    args = dict(request.args)
-    args.pop("page", 1)
-
-    return render_template(
-        "home/allcases.html", 
-        cases=allcases,
-        prev_page=url_for(request.endpoint, page=allcases.prev_num, **args),
-        next_page=url_for(request.endpoint, page=allcases.next_num, **args),
-    )
+    allcases = Cases.query.filter_by(user_id=current_user.get_id()).order_by(Cases.id.desc())
+    return render_template("home/allcases.html", cases=allcases)
 
 @blueprint.route('/settings', methods=['GET', 'POST'])
 @login_required
