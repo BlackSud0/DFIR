@@ -11,6 +11,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.authentication.models import Cases, APIs, FileHash
 from apps.home.forms import CreateCaseForm, CreateSettingsForm, SubmissionForm
+from apps.home.utils import file_scan
 
 
 @blueprint.route('/index')
@@ -81,14 +82,29 @@ def newcase():
 def cases(case_id):
     case = Cases.query.filter_by(id=case_id, user_id=current_user.get_id()).first_or_404()
     submission_form = SubmissionForm(request.form)
+    APIKey = APIs.query.filter_by(user_id=current_user.get_id()).first()
 
     if request.method == "POST":
         if 'submit_file' in request.form:
-            return render_template(
-                "home/case.html",
-                case=case,
-                form=submission_form,
-            )
+            # check if the post request has the file part
+            # If the user does not select a file, the browser submits an empty file without a filename.
+            if 'file' in request.files and request.files['file'].filename != "":
+                
+                file = request.files['file']
+                result = file_scan(file, case, APIKey)
+                return render_template(
+                    "home/case.html",
+                    case=case,
+                    form=submission_form,
+                    result=result or None
+                )
+            
+            else:
+                return render_template(
+                    "home/case.html",
+                    case=case,
+                    form=submission_form
+                )
         elif 'submit_hash' in request.form:
             return render_template(
                 "home/case.html",
