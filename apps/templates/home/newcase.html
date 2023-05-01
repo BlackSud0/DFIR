@@ -20,8 +20,8 @@
 							</div>
 							<ul class="breadcrumb">
 								<li class="breadcrumb-item"><a href="/"><i class="feather icon-home"></i></a></li>
-								<li class="breadcrumb-item"><a href="#">Investigation</a></li>
-								<li class="breadcrumb-item"><a href="#">New Case</a></li>
+								<li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.newcase') }}">Investigation</a></li>
+								<li class="breadcrumb-item"><a href="{{ url_for('home_blueprint.newcase') }}">New Case</a></li>
 							</ul>
 						</div>
 					</div>
@@ -92,8 +92,8 @@
 										</div>
 										<div class="tab-pane" id="progress-t-tab3">
 											<div class="text-center mt-2">
-												<i class="feather icon-plus-square display-3 text-success"></i>
-												<h5 class="mt-3">One more click! . .</h5>
+												<i class="feather icon-plus-square display-4 text-success"></i>
+												<h5 class="mt-2">One more click! . .</h5>
 												<p>Where you can submit new malware files, hashes, or URLs</p>
 												{{ form.submit(class="btn btn-success") }}
 											</div>
@@ -114,42 +114,42 @@
 					<div class="col-xl-3 col-md-6 mb-4">
 						<h5>Anti-Malware Engines</h5>
 						<hr>
-						<div class="form-group">
+						<div class="form-group mb-2">
 							<div class="switch switch-primary d-inline m-r-10">
 								{{ form.virustotal(class="form-control",checked="") }}
 								<label for="virustotal" class="cr"></label>
 							</div>
 							<label>VirusTotal</label>
 						</div>
-						<div class="form-group">
+						<div class="form-group mb-2">
 							<div class="switch switch-primary d-inline m-r-10">
 								{{ form.anyrun(class="form-control") }}
 								<label for="anyrun" class="cr"></label>
 							</div>
 							<label>AnyRun</label>
 						</div>
-						<div class="form-group">
+						<div class="form-group mb-2">
 							<div class="switch switch-primary d-inline m-r-10">
 								{{ form.hybridanalysis(class="form-control") }}
 								<label for="hybridanalysis" class="cr"></label>
 							</div>
 							<label>Hybrid Analysis</label>
 						</div>
-						<div class="form-group">
+						<div class="form-group mb-2">
 							<div class="switch switch-primary d-inline m-r-10">
 								{{ form.malwarebazaar(class="form-control") }}
 								<label for="malwarebazaar" class="cr"></label>
 							</div>
 							<label>Malware Bazaar</label>
 						</div>
-						<div class="form-group">
+						<div class="form-group mb-2">
 							<div class="switch switch-primary d-inline m-r-10">
 								{{ form.alienvault_otx(class="form-control") }}
 								<label for="alienvault_otx" class="cr"></label>
 							</div>
 							<label>AlienVault OTX</label>
 						</div>
-						<div class="form-group">
+						<div class="form-group mb-2">
 							<div class="switch switch-primary d-inline m-r-10">
 								{{ form.urlscan(class="form-control") }}
 								<label for="urlscan" class="cr"></label>

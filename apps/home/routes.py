@@ -4,14 +4,13 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 from apps import db
-
 from apps.home import blueprint
 from flask import request, render_template, redirect, url_for
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.authentication.models import Cases, APIs, FileHash
 from apps.home.forms import CreateCaseForm, CreateSettingsForm, SubmissionForm
-from apps.home.utils import file_scan
+from apps.home.utils import file_scan, hashid
 
 
 @blueprint.route('/index')
@@ -91,14 +90,46 @@ def cases(case_id):
             if 'file' in request.files and request.files['file'].filename != "":
                 
                 file = request.files['file']
-                result = file_scan(file, case, APIKey)
-                return render_template(
+                filename = file.filename
+                file = file.read()
+                sha256 = hashid(file, hash_type="sha256")
+                sha1 = hashid(file, hash_type="sha1")
+                md5 = hashid(file, hash_type="md5")
+
+                result = file_scan(file, case, APIKey, filename, sha256)
+
+                if hasattr(result, 'code') or result == None: # Dummy IF ppppppppppppppppppp
+                    return render_template(
                     "home/case.html",
                     case=case,
                     form=submission_form,
-                    result=result or None
-                )
-            
+                    vterror=result
+                    )
+                else:
+                    submission = FileHash(user_id=current_user.get_id(), case_id=case.id)
+                    submission.case_name = case.case_name
+                    submission.file_name = filename
+                    submission.data_type = "file"
+                    submission.sha256 = sha256
+                    submission.sha1 = sha1
+                    submission.md5 = md5
+                    submission.analysis_id = result.id if hasattr(result, 'id') else None
+                    submission.size = result.size if hasattr(result, 'size') else None
+                    submission.type = result.type_tag if hasattr(result, 'type_tag') else None
+                    submission.scan_status = result.status if hasattr(result, 'status') else "completed"
+                    submission.malicious = result.stats['malicious'] if hasattr(result, 'stats') else result.last_analysis_stats['malicious']
+                    
+                    db.session.add(submission)
+                    db.session.commit()
+                    # return redirect(url_for('home_blueprint.cases',case_id=case.id))
+
+                    return render_template(
+                        "home/case.html",
+                        case=case,
+                        form=submission_form,
+                        result=result
+                    )
+                
             else:
                 return render_template(
                     "home/case.html",
@@ -156,6 +187,12 @@ def delete_case(case_id):
 def allcases():
     allcases = Cases.query.filter_by(user_id=current_user.get_id()).order_by(Cases.id.desc())
     return render_template("home/allcases.html", cases=allcases)
+
+@blueprint.route('/submissions')
+@login_required
+def submissions():
+    filehash = FileHash.query.filter_by(user_id=current_user.get_id()).order_by(FileHash.id.desc())
+    return render_template("home/submissions.html", FileHash=filehash)
 
 @blueprint.route('/settings', methods=['GET', 'POST'])
 @login_required
