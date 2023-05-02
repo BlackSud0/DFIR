@@ -121,6 +121,8 @@
 	<script src="/static/assets/js/plugins/dataTables.bootstrap4.min.js"></script>
 
     <script>
-		$('#all-cases-table').DataTable();
+		$('#all-cases-table').DataTable({
+            order: [[0, 'desc']],
+        });
 	</script>
 {% endblock javascripts %}

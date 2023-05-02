@@ -182,6 +182,22 @@ def delete_case(case_id):
     
     return redirect(url_for('home_blueprint.allcases'))
 
+@blueprint.route('/submission/filehash/delete/<int:submission_id>')
+@login_required
+def delete_filehash(submission_id):
+    submission = FileHash.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
+    # Admins should not be able to delete themselves
+    if submission:
+        FileHash.query.filter_by(id=submission_id).delete()
+        db.session.commit()
+        filehash = FileHash.query.filter_by(user_id=current_user.get_id()).order_by(FileHash.id.desc())
+        return render_template(
+            "home/submissions.html", 
+            msg='Submission deleted successfully!', 
+            FileHash=filehash
+        )
+    return redirect(url_for('home_blueprint.allcases'))
+
 @blueprint.route('/allcases')
 @login_required
 def allcases():

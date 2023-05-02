@@ -69,7 +69,7 @@
                                                     <th><span>Date</span></th>
                                                     <th><span>Status <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
                                                     <th><span>Case Name <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
-                                                    <th><span>Submited By <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
+                                                    <th><span>Submission <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
                                                     <th><span>Type <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
                                                     <th><span>Scan <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
                                                     <th class="text-center"><span>Actions <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
@@ -97,8 +97,8 @@
                                                     <td>
                                                         <a href="{{ url_for('home_blueprint.cases',case_id=submission.case_id) }}">{{ submission.case_name }}</a>
                                                     </td>
-                                                    <td>
-                                                        {{ current_user.username }}
+                                                    <td data-toggle="tooltip" data-placement="top" title="{{submission.file_name}}">
+                                                        {{ submission.file_name | truncate(15) }}
                                                     </td>
                                                     <td>
                                                         <div class="badge badge-primary">
@@ -118,10 +118,10 @@
                                                     </td>
                                                     <td class="text-center">
                                                         <i class="feather icon-eye text-primary m-r-5 f-20"></i>
-                                                        <a href="{{ url_for('home_blueprint.cases',case_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Refresh">
-                                                            <i class="feather icon-repeat text-success m-r-5 f-20"></i>
+                                                        <a href="{{ url_for('home_blueprint.cases',case_id=submission.id) if submission.scan_status != 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="Refresh">
+                                                            <i class="feather icon-repeat {% if submission.scan_status == 'completed' %}text-muted disabled{% else %}text-success{% endif %} m-r-5 f-20"></i>
                                                         </a>
-                                                        <a href="{{ url_for('home_blueprint.delete_case',case_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Delete">
+                                                        <a href="{{ url_for('home_blueprint.delete_filehash',submission_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Delete">
                                                             <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
                                                         </a>
                                                     </td>
@@ -694,6 +694,8 @@
 	<script src="/static/assets/js/plugins/dataTables.bootstrap4.min.js"></script>
 
     <script>
-		$('#all-filehash-table').DataTable();
+		$('#all-filehash-table').DataTable({
+            order: [[0, 'desc']],
+        });
 	</script>
 {% endblock javascripts %}

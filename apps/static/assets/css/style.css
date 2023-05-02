@@ -617,6 +617,11 @@ h6, .h6 {
     font-size: 0.875rem;
 }
 
+.disabled{
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
 .lead {
     font-size: 1.25rem;
     font-weight: 300;

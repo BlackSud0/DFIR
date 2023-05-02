@@ -18,8 +18,7 @@ def file_scan(file, case, APIKey, filename, sha256):
             if not hasattr(result, 'code'):
                 result = virustotal(result, "analysis", APIKey.VTAPI)
         return result
-    
-    elif APIKey.MBAPI and case.malwarebazaar:
+    elif APIKey.HBAPI and case.hybridanalysis:
         return None
     else:
         return None
