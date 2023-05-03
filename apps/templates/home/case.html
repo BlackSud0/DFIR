@@ -31,7 +31,7 @@
             <!-- [ Main Content ] start -->
             <div class="row">
 				{% if result %}
-				{{result.last_analysis_status}}
+				{{result}}
 				{% endif %}
                 <!-- order-card start -->
                 <div class="col-md-6 col-xl-3">
@@ -74,10 +74,10 @@
                     </div>
                 </div>
                 <!-- order-card end -->
-				{% if vterror %}
+				{% if error %}
                     <div class="col-md-12">
                         <div class="alert alert-danger" role="alert">
-                            <strong>{{ vterror.code }} :</strong> {{ vterror.message }}
+                            <strong>{{ error.code }} :</strong> {{ error.message }}
                         </div>
                     </div>
                 {% endif %}

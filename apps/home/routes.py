@@ -10,7 +10,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.authentication.models import Cases, APIs, FileHash
 from apps.home.forms import CreateCaseForm, CreateSettingsForm, SubmissionForm
-from apps.home.utils import file_scan, hashid
+from apps.home.utils import file_scan, hash_scan, hashid, PyJSON
 
 
 @blueprint.route('/index')
@@ -85,63 +85,80 @@ def cases(case_id):
 
     if request.method == "POST":
         if 'submit_file' in request.form:
-            # check if the post request has the file part
-            # If the user does not select a file, the browser submits an empty file without a filename.
-            if 'file' in request.files and request.files['file'].filename != "":
-                
-                file = request.files['file']
-                filename = file.filename
-                file = file.read()
-                sha256 = hashid(file, hash_type="sha256")
-                sha1 = hashid(file, hash_type="sha1")
-                md5 = hashid(file, hash_type="md5")
+            if case.virustotal or case.hybridanalysis:
+                # check if the post request has the file part
+                # If the user does not select a file, the browser submits an empty file without a filename.
+                if 'file' in request.files and request.files['file'].filename != "":
+                    file = request.files['file']
+                    filename = file.filename
+                    file = file.read()
+                    sha256 = hashid(file, hash_type="sha256")
+                    sha1 = hashid(file, hash_type="sha1")
+                    md5 = hashid(file, hash_type="md5")
+                    result = file_scan(file, APIKey, filename, sha256)
 
-                result = file_scan(file, case, APIKey, filename, sha256)
-
-                if hasattr(result, 'code') or result == None: # Dummy IF ppppppppppppppppppp
-                    return render_template(
-                    "home/case.html",
-                    case=case,
-                    form=submission_form,
-                    vterror=result
-                    )
+                    if hasattr(result, 'code') or result == None: # Dummy IF ppppppppppppppppppp
+                        return render_template(
+                        "home/case.html",
+                        case=case,
+                        form=submission_form,
+                        error=result
+                        )
+                    else:
+                        submission = FileHash(user_id=current_user.get_id(), case_id=case.id)
+                        submission.case_name = case.case_name
+                        submission.file_name = filename
+                        submission.data_type = "file"
+                        submission.sha256 = sha256
+                        submission.sha1 = sha1
+                        submission.md5 = md5
+                        submission.analysis_id = result.id if hasattr(result, 'id') else None
+                        submission.size = result.size if hasattr(result, 'size') else None
+                        submission.type = result.type_tag if hasattr(result, 'type_tag') else None
+                        submission.scan_status = result.status if hasattr(result, 'status') else "completed"
+                        submission.malicious = result.stats['malicious'] if hasattr(result, 'stats') else result.last_analysis_stats['malicious']
+                        
+                        db.session.add(submission)
+                        db.session.commit()
+                        return render_template(
+                            "home/case.html",
+                            case=case,
+                            form=submission_form,
+                            result=result
+                        )
                 else:
-                    submission = FileHash(user_id=current_user.get_id(), case_id=case.id)
-                    submission.case_name = case.case_name
-                    submission.file_name = filename
-                    submission.data_type = "file"
-                    submission.sha256 = sha256
-                    submission.sha1 = sha1
-                    submission.md5 = md5
-                    submission.analysis_id = result.id if hasattr(result, 'id') else None
-                    submission.size = result.size if hasattr(result, 'size') else None
-                    submission.type = result.type_tag if hasattr(result, 'type_tag') else None
-                    submission.scan_status = result.status if hasattr(result, 'status') else "completed"
-                    submission.malicious = result.stats['malicious'] if hasattr(result, 'stats') else result.last_analysis_stats['malicious']
-                    
-                    db.session.add(submission)
-                    db.session.commit()
-                    # return redirect(url_for('home_blueprint.cases',case_id=case.id))
-
                     return render_template(
                         "home/case.html",
                         case=case,
                         form=submission_form,
-                        result=result
+                        error=PyJSON({'code': 'FileSubmissionError', 'message': 'Please submit a valid request and use a valid file name.'})
                     )
-                
             else:
                 return render_template(
                     "home/case.html",
                     case=case,
-                    form=submission_form
+                    form=submission_form,
+                    error=PyJSON({'code': 'SandboxError', 'message': 'Please enable Virustotal or Hybrid-analysis and try again.'})
                 )
+            
         elif 'submit_hash' in request.form:
-            return render_template(
-                "home/case.html",
-                case=case,
-                form=submission_form,
-            )
+            if case.virustotal or case.malwarebazaar:
+                hash = request.form.get('hash')
+                result = hash_scan(hash, APIKey)
+                return render_template(
+                    "home/case.html",
+                    case=case,
+                    form=submission_form,
+                    error=result
+                )
+            else:
+                return render_template(
+                    "home/case.html",
+                    case=case,
+                    form=submission_form,
+                    error=PyJSON({'code': 'SandboxError', 'message': 'Please enable Virustotal or Malware-Bazaar and try again.'})
+                )
+            
         elif 'submit_url' in request.form:
             return render_template(
                 "home/case.html",
