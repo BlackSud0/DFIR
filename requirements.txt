@@ -17,5 +17,6 @@ flask_mysqldb
 malwarebazaar==0.2.2
 vt-py==0.17.5
 OTXv2==1.5.12
+validators==0.14.2
 # psycopg2-binary
 

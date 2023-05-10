@@ -57,6 +57,10 @@ def hash_scan(hash, APIKey):
         result = malwarebazaar(hash, APIKey)
     return result
 
+def urlip_scan(urlip, data_type, APIKey):
+    result = virustotal(urlip, data_type, APIKey)
+    return result
+
 def virustotal(data, data_type, APIKey, filename='unknown'):
     if APIKey.VTAPI:
         with vt.Client(APIKey.VTAPI) as client:
@@ -72,6 +76,22 @@ def virustotal(data, data_type, APIKey, filename='unknown'):
                     # Get a file report by hash: Retrieve information about a file
                     file_hash = client.get_object("/files/{}", data)
                     return file_hash
+                
+                elif data_type == "url":
+                    url_id = vt.url_id(data)
+                    # Get a URL analysis report: Returns a URL object.
+                    url = client.get_object("/urls/{}", url_id)
+                    if hasattr(url, 'code'):
+                        # Scan URL: Returns a URL object.
+                        url = client.scan_url(data)
+                        if not hasattr(url, 'code'):
+                            url = client.get_object("/analyses/{}", url.id)
+                    return url
+                
+                elif data_type == "ip":
+                    # Get an IP address report: Returns an IP address object.
+                    ip = client.get_object("/ip_addresses/{}", data)
+                    return ip
                 
                 elif data_type == "analysis":
                     # Get a URL/file analysis report: Returns a Analysis object.

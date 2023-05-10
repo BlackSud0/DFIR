@@ -3,6 +3,7 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
+import re, json
 from apps import db
 from apps.home import blueprint
 from flask import request, render_template, redirect, url_for
@@ -10,7 +11,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.authentication.models import Cases, APIs, FileHash
 from apps.home.forms import CreateCaseForm, CreateSettingsForm, SubmissionForm
-from apps.home.utils import file_scan, hash_scan, hashid, PyJSON
+from apps.home.utils import file_scan, hash_scan, urlip_scan, hashid, PyJSON
 
 
 @blueprint.route('/index')
@@ -97,7 +98,7 @@ def cases(case_id):
                     md5 = hashid(file, hash_type="md5")
                     result = file_scan(file, APIKey, filename, sha256)
 
-                    if hasattr(result, 'code') or result == None: # Dummy IF ppppppppppppppppppp
+                    if hasattr(result, 'code'):
                         return render_template(
                         "home/case.html",
                         case=case,
@@ -145,12 +146,36 @@ def cases(case_id):
             if case.virustotal or case.malwarebazaar:
                 hash = request.form.get('hash')
                 result = hash_scan(hash, APIKey)
-                return render_template(
+
+                if hasattr(result, 'code'):
+                    return render_template(
                     "home/case.html",
                     case=case,
                     form=submission_form,
                     error=result
-                )
+                    )
+                else:
+                    submission = FileHash(user_id=current_user.get_id(), case_id=case.id)
+                    submission.case_name = case.case_name
+                    submission.file_name = json.dumps(result.names) if hasattr(result, 'names') else result.file_name #"unknown" # result.file_name # filename
+                    submission.data_type = "hash"
+                    submission.sha256 = result.sha256 if hasattr(result, 'sha256') else result.sha256_hash
+                    submission.sha1 = result.sha1 if hasattr(result, 'sha1') else result.sha1_hash
+                    submission.md5 = result.md5 if hasattr(result, 'md5') else result.md5_hash
+                    submission.analysis_id = result.sha256 if hasattr(result, 'sha256') else result.sha256_hash
+                    submission.size = result.size if hasattr(result, 'size') else result.file_size
+                    submission.type = result.type_tag if hasattr(result, 'type_tag') else result.file_type
+                    submission.scan_status = result.status if hasattr(result, 'status') else "completed"
+                    submission.malicious = result.stats['malicious'] if hasattr(result, 'stats') else 1
+                    
+                    db.session.add(submission)
+                    db.session.commit()
+                    return render_template(
+                        "home/case.html",
+                        case=case,
+                        form=submission_form,
+                        result=result
+                    )
             else:
                 return render_template(
                     "home/case.html",
@@ -160,11 +185,22 @@ def cases(case_id):
                 )
             
         elif 'submit_url' in request.form:
+            urlip = request.form.get('url')
+            url_pattern = "^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$"
+            if re.match(url_pattern, urlip):
+                data_type = "url"
+            else:
+                data_type = "ip"
+
+            result = urlip_scan(urlip, data_type, APIKey)
+
             return render_template(
                 "home/case.html",
                 case=case,
                 form=submission_form,
+                result=result
             )
+        
         elif 'submit_pcap' in request.form:
             return render_template(
                 "home/case.html",

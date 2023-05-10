@@ -98,6 +98,26 @@ class FileHash(db.Model):
 
     def __repr__(self):
         return f'<FileHash {self.file_name}>'
+
+class URLIP(db.Model):
+
+    __tablename__ = 'URLIP'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    case_id = db.Column(db.Integer, nullable=False)
+    analysis_id = db.Column(db.String(200), nullable=True)
+    case_name = db.Column(db.String(100), nullable=True)
+    url = db.Column(db.String(255), nullable=True)
+    ip = db.Column(db.String(255), nullable=True)
+    type = db.Column(db.String(100), nullable=True)
+    malicious = db.Column(db.Integer, nullable=True)
+    scan_status = db.Column(db.String(100), nullable=True)
+    data_type = db.Column(db.String(100), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True),server_default=db.func.now())
+
+    def __repr__(self):
+        return f'<URLIP {self.case_name}>'
     
 @login_manager.user_loader
 def user_loader(id):
