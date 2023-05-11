@@ -1,4 +1,4 @@
-import hashlib, json, io, vt
+import hashlib, json, io, vt, aiohttp, requests
 from malwarebazaar import Bazaar
 
 # VT_FILE = 'https://www.virustotal.com/api/v3/files'
@@ -67,56 +67,62 @@ def urlip_scan(urlip, data_type, APIKey):
 
 def virustotal(data, data_type, APIKey, filename='unknown', scan=False):
     if APIKey.VTAPI:
-        with vt.Client(APIKey.VTAPI) as client:
-            try:
-                if data_type == "file":
-                    # Upload a file for scanning: scan and analyse a file
-                    file = io.BytesIO(data)
-                    file.name = filename
-                    analysis = client.scan_file(file)
-                    return analysis
-                
-                elif data_type == "hash":
-                    # Get a file report by hash: Retrieve information about a file
-                    file_hash = client.get_object("/files/{}", data)
-                    return file_hash
-                
-                elif data_type == "url":
-                    # Scan URL: Returns a URL object.
-                    if scan:
-                        url = client.scan_url(data)
-                    else:
-                        # Get a URL analysis report: Returns a URL object.
-                        url_id = vt.url_id(data)
-                        url = client.get_object("/urls/{}", url_id)
-                    return url
-                
-                elif data_type == "ip":
-                    # Get an IP address report: Returns an IP address object.
-                    ip = client.get_object("/ip_addresses/{}", data)
-                    return ip
-                
-                elif data_type == "analysis":
-                    # Get a URL/file analysis report: Returns a Analysis object.
-                    analysis = client.get_object("/analyses/{}", data.id)
-                    return analysis
-                
-            except vt.error.APIError as e:
-                return e
+        try:
+            with vt.Client(APIKey.VTAPI) as client:
+                try:
+                    if data_type == "file":
+                        # Upload a file for scanning: scan and analyse a file
+                        file = io.BytesIO(data)
+                        file.name = filename
+                        analysis = client.scan_file(file)
+                        return analysis
+                    
+                    elif data_type == "hash":
+                        # Get a file report by hash: Retrieve information about a file
+                        file_hash = client.get_object("/files/{}", data)
+                        return file_hash
+                    
+                    elif data_type == "url":
+                        # Scan URL: Returns a URL object.
+                        if scan:
+                            url = client.scan_url(data)
+                        else:
+                            # Get a URL analysis report: Returns a URL object.
+                            url_id = vt.url_id(data)
+                            url = client.get_object("/urls/{}", url_id)
+                        return url
+                    
+                    elif data_type == "ip":
+                        # Get an IP address report: Returns an IP address object.
+                        ip = client.get_object("/ip_addresses/{}", data)
+                        return ip
+                    
+                    elif data_type == "analysis":
+                        # Get a URL/file analysis report: Returns a Analysis object.
+                        analysis = client.get_object("/analyses/{}", data.id)
+                        return analysis
+                    
+                except vt.error.APIError as e:
+                    return e
+        except aiohttp.ClientConnectorError as ex:
+            return PyJSON({'code': 'No Internet Connection', 'message': ex})
     else:
         result = PyJSON({'code': 'VirusTotalError', 'message': 'API key can not be an empty string.'})
         return result
     
 def malwarebazaar(hash, APIKey):
     if APIKey.MBAPI:
-        bz = Bazaar(api_key=APIKey.MBAPI)
-        response = bz.query_hash(hash)
-        if response.get('query_status') == "ok":
-            result = response["data"][0] #PyJSON(response["data"][0])
-            return result
-        else:
-            result = PyJSON({'code': 'HashQueryError', 'message': f'No matches found => {response["query_status"]}'})
-            return result
+        try:
+            bz = Bazaar(api_key=APIKey.MBAPI)
+            response = bz.query_hash(hash)
+            if response.get('query_status') == "ok":
+                result = response["data"][0] #PyJSON(response["data"][0])
+                return result
+            else:
+                result = PyJSON({'code': 'HashQueryError', 'message': f'No matches found => {response["query_status"]}'})
+                return result
+        except requests.exceptions.ConnectionError as ex:
+            return PyJSON({'code': 'No Internet Connection', 'message': "Please check your internet connection and try again"})
     else:
         result = PyJSON({'code': 'MalwareBazaarError', 'message': 'API key can not be an empty string.'})
         return result

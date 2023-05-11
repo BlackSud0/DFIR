@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Apex Charts {% endblock %} 
+{% block title %} All Submissions {% endblock %} 
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
@@ -37,6 +37,13 @@
                     <div class="col-md-12">
                         <div class="alert alert-success" role="alert">
                             {{ msg | safe }}
+                        </div>
+                    </div>
+                {% endif %}
+                {% if error %}
+                    <div class="col-md-12">
+                        <div class="alert alert-danger" role="alert">
+                            <strong>{{ error.code }} :</strong> {{ error.message }}
                         </div>
                     </div>
                 {% endif %}
@@ -117,7 +124,9 @@
                                                         {% endif %}
                                                     </td>
                                                     <td class="text-center">
-                                                        <i class="feather icon-eye text-primary m-r-5 f-20"></i>
+                                                        <a href="{{ url_for('home_blueprint.filehash_report',submission_id=submission.id) if submission.scan_status == 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="View Reports">
+                                                            <i class="feather icon-eye {% if submission.scan_status == 'completed' %}text-primary{% else %}text-muted disabled{% endif %} m-r-5 f-20"></i>
+                                                        </a>
                                                         <a href="{{ url_for('home_blueprint.cases',case_id=submission.id) if submission.scan_status != 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="Refresh">
                                                             <i class="feather icon-repeat {% if submission.scan_status == 'completed' %}text-muted disabled{% else %}text-success{% endif %} m-r-5 f-20"></i>
                                                         </a>

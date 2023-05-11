@@ -6953,6 +6953,10 @@ button.bg-dark:focus {
     border-right: 1px solid #e3eaef !important;
 }
 
+.border-report {
+    border-right: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
 .border-bottom {
     border-bottom: 1px solid #e3eaef !important;
 }
@@ -8237,6 +8241,10 @@ button.bg-dark:focus {
 
 .w-75 {
     width: 75% !important;
+}
+
+.w-90 {
+    width: 90% !important;
 }
 
 .w-100 {

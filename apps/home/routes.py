@@ -52,10 +52,11 @@ def newcase():
         # Check casename exists
         case = Cases.query.filter_by(case_name=case_name).first()
         if case:
-            return render_template('home/newcase.html',
-                                   msg='That Case name already exists',
-                                   success=False,
-                                   form=create_case_form)
+            return render_template(
+                'home/newcase.html',
+                msg='That Case name already exists',
+                success=False,
+                form=create_case_form)
         
         # else we can create the case
         case = Cases(case_name=case_name,user_id=current_user.get_id())
@@ -108,6 +109,7 @@ def cases(case_id):
                     else:
                         submission = FileHash(user_id=current_user.get_id(), case_id=case.id)
                         submission.case_name = case.case_name
+                        submission.priority = case.case_priority
                         submission.file_name = filename
                         submission.data_type = "file"
                         submission.sha256 = sha256
@@ -157,6 +159,7 @@ def cases(case_id):
                 else:
                     submission = FileHash(user_id=current_user.get_id(), case_id=case.id)
                     submission.case_name = case.case_name
+                    submission.priority = case.case_priority
                     submission.file_name = json.dumps(result.names) if hasattr(result, 'names') else result.file_name #"unknown" # result.file_name # filename
                     submission.data_type = "hash"
                     submission.sha256 = result.sha256 if hasattr(result, 'sha256') else result.sha256_hash
@@ -203,6 +206,7 @@ def cases(case_id):
             else:
                 submission = URLIP(user_id=current_user.get_id(), case_id=case.id)
                 submission.case_name = case.case_name
+                submission.priority = case.case_priority
                 submission.data_type = data_type
                 submission.url = urlip if data_type == "url" else None
                 submission.ip = urlip if data_type == "ip" else None
@@ -268,7 +272,28 @@ def delete_filehash(submission_id):
             msg='Submission deleted successfully!', 
             FileHash=filehash
         )
-    return redirect(url_for('home_blueprint.allcases'))
+    return redirect(url_for('home_blueprint.submissions'))
+
+@blueprint.route('/reports/filehash/<int:submission_id>')
+@login_required
+def filehash_report(submission_id):
+    submission = FileHash.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
+    APIKey = APIs.query.filter_by(user_id=current_user.get_id()).first()
+    # Admins should not be able to delete themselves
+    if submission:
+        result = hash_scan(submission.sha256, APIKey)
+        if hasattr(result, 'code'):
+            return render_template(
+            "home/filehash-report.html",
+            error=result
+            )
+        else:
+            return render_template(
+                "home/filehash-report.html",
+                properties=submission,
+                submission=result
+            )
+    return redirect(url_for('home_blueprint.submissions'))
 
 @blueprint.route('/allcases')
 @login_required

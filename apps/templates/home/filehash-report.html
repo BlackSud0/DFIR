@@ -1,0 +1,611 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Total Cases {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <!-- [ Main Content ] start -->
+    <section class="pcoded-main-container">
+		<div class="pcoded-content">
+			<!-- [ breadcrumb ] start -->
+			<div class="page-header">
+				<div class="page-block">
+					<div class="row align-items-center">
+						<div class="col-md-12">
+							<div class="page-header-title">
+								<h5 class="m-b-10">Reports</h5>
+							</div>
+							<ul class="breadcrumb">
+								<li class="breadcrumb-item"><a href="index.html"><i class="feather icon-home"></i></a></li>
+								<li class="breadcrumb-item"><a href="#!">Investigation</a></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- [ breadcrumb ] end -->
+			<!-- [ Main Content ] start -->
+			<div class="row">
+				{% if error %}
+                    <div class="col-md-12">
+                        <div class="alert alert-danger" role="alert">
+                            <strong>{{ error.code }} :</strong> {{ error.message }}
+                        </div>
+                    </div>
+                {% endif %}
+				{% if submission %}
+				<!-- [ Invoice ] start -->
+				<div class="container" id="printTable">
+					<div>
+						<div class="card card-border-c-blue">
+							<div class="row invoice-contact m-0">
+								<div class="col-md-8">
+									<div class="invoice-box row">
+										<div class="col-sm-12 border-report">
+											<a href="index.html" class="b-brand">
+												<img class="img-fluid" src="https://appsrv1-147a1.kxcdn.com/gradient-pro/images/logo-dark.png" alt="Gradient able Logo">
+											</a>
+											<p class="w-90 p-l-10 m-t-10">DFIR platform is a powerful tool that can help organizations investigate, and respond to security incidents more quickly and effectively, ultimately reducing the risk of data breaches and other security incidents.</p>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-4 text-center">
+									<h5 class="mb-20">Submission No.</h5>
+									<h5 class="text-uppercase text-primary">
+										<span>#{{properties.id}}</span>
+									</h5>
+								</div>
+							</div>
+							<hr>
+							<div class="card-body">
+								<div class="row invoive-info">
+									<div class="col-xl-4 col-lg-12 task-detail-right">
+										<div class="card trnasiction-card m-0">
+											{% if properties.malicious == 0 %}
+													<div class="card-header bg-c-green rounded-top">
+														<div class="counter text-center">
+															<h4 id="timer" class="text-white m-0">Benign </h4>
+														</div>
+														<div class="card-header-right">
+															<div class="transection-preogress complited">
+																<!-- fa-bug -->
+																<span class="fa fa-check f-20"></span>
+															</div>
+														</div>
+													</div>
+												{% else %}
+													<div class="card-header bg-c-red rounded-top">
+														<div class="counter text-center">
+															<h4 id="timer" class="text-white m-0">Malicious </h4>
+														</div>
+														<div class="card-header-right">
+															<div class="transection-preogress complited">
+																<span class="fa fa-bug f-20"></span>
+															</div>
+														</div>
+													</div>
+												{% endif %}
+											
+										</div>
+										<div class="card trnasiction-card">
+											<div class="card-header">
+												<h5>Task Details</h5>
+											</div>
+											<div class="card-body task-details pb-0">
+												<table class="table">
+													<tbody>
+														<tr>
+															<td><i class="fas fa-adjust m-r-5"></i> Case:</td>
+															<td class="text-right"><span class="float-right"><a class="text-secondary" href="#!"> {{ properties.case_name }}</a></span></td>
+														</tr>
+														<tr>
+															<td><i class="far fa-calendar-alt m-r-5"></i> Submited:</td>
+															<td class="text-right">{{ properties.created_at }}</td>
+														</tr>
+														<tr>
+															<td><i class="far fa-calendar-alt m-r-5"></i> Updated:</td>
+															<td class="text-right">{{submission.first_submission_date if submission.first_submission_date else submission.first_seen}}</td>
+														</tr>
+														<tr>
+															<td><i class="fas fa-chart-line m-r-5"></i> Priority:</td>
+															<td class="text-right">
+																{% if properties.priority == 1 %}
+																	<div class="badge badge-danger">
+																		Critical
+																	</div>
+																{% elif properties.priority == 2 %}
+																	<div class="badge badge-danger">
+																		Hard
+																	</div>
+																{% elif properties.priority == 3 %}
+																	<div class="badge badge-warning">
+																		Medium
+																	</div>
+																{% elif properties.priority == 4 %}
+																	<div class="badge badge-success">
+																		Low
+																	</div>
+																{% endif %}
+															</td>
+														</tr>
+														<tr>
+															<td><i class="fas fa-file m-r-5"></i> File size:</td>
+															<td class="text-right">{{submission.size if submission.size else submission.file_size}}</td>
+														</tr>
+														<tr>
+															<td><i class="fas fa-user-plus m-r-5"></i> Added by:</td>
+															<td class="text-right"><a class="text-secondary" href="#!">{{ current_user.username }}</a></td>
+														</tr>
+														<tr>
+															<td><i class="fas fa-thermometer-half m-r-5"></i> Status:</td>
+															<td class="text-right">Completed</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+											<div class="border-top transection-footer row">
+												<div class="col-6  border-right"><a href="#!" class="text-dark"><i class="fa fa-plus-circle m-r-10"></i>Report CE</a></div>
+												<div class="col-6"><a href="#!" class="text-dark"><i class="fa fa-eye m-r-10"></i>Transcript</a></div>
+											</div>
+										</div>
+										<div class="card">
+											<div class="card-header">
+												<h5>Task settings</h5>
+											</div>
+											<div class="card-body task-setting">
+												<div class="form-group">
+													<div class="row">
+														<div class="col-sm-12">
+															<div class="form-group  mb-0">
+																<div class="switch switch-primary d-inline m-r-10">
+																	<input type="checkbox" id="switch-1" checked="">
+																	<label for="switch-1" class="cr"></label>
+																</div>
+																<label>Publish after save</label>
+															</div>
+														</div>
+													</div>
+													<div class="row">
+														<div class="col-sm-12">
+															<div class="form-group mb-0">
+																<div class="switch switch-primary d-inline m-r-10">
+																	<input type="checkbox" id="switch-2" checked="">
+																	<label for="switch-2" class="cr"></label>
+																</div>
+																<label>Allow comments</label>
+															</div>
+														</div>
+													</div>
+													<div class="row">
+														<div class="col-sm-12">
+															<div class="form-group  mb-0">
+																<div class="switch switch-primary d-inline m-r-10">
+																	<input type="checkbox" id="switch-3" checked="">
+																	<label for="switch-3" class="cr"></label>
+																</div>
+																<label>Allow users to edit the task</label>
+															</div>
+														</div>
+													</div>
+													<div class="row">
+														<div class="col-sm-12">
+															<div class="form-group  mb-0">
+																<div class="switch switch-primary d-inline m-r-10">
+																	<input type="checkbox" id="switch-4">
+																	<label for="switch-4" class="cr"></label>
+																</div>
+																<label>Use task timer</label>
+															</div>
+														</div>
+													</div>
+													<div class="row">
+														<div class="col-sm-12">
+															<div class="form-group  mb-0">
+																<div class="switch switch-primary d-inline m-r-10">
+																	<input type="checkbox" id="switch-5">
+																	<label for="switch-5" class="cr"></label>
+																</div>
+																<label>Auto saving</label>
+															</div>
+														</div>
+													</div>
+													<div class="row">
+														<div class="col-sm-12">
+															<div class="form-group  mb-0">
+																<div class="switch switch-primary d-inline m-r-10">
+																	<input type="checkbox" id="switch-6">
+																	<label for="switch-6" class="cr"></label>
+																</div>
+																<label>Auto saving</label>
+															</div>
+														</div>
+													</div>
+													<div class="row">
+														<div class="col-sm-12">
+															<div class="form-group mb-0">
+																<div class="switch switch-primary d-inline m-r-10">
+																	<input type="checkbox" id="switch-7">
+																	<label for="switch-7" class="cr"></label>
+																</div>
+																<label>Allow attachments</label>
+															</div>
+														</div>
+													</div>
+													<div class="row text-center mt-2">
+														<div class="col-sm-12">
+															<button type="button" class="btn waves-effect waves-light btn-secondary">Reset
+															</button>
+															<button type="button" class="btn waves-effect waves-light btn-primary">Save</button>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="card">
+											<div class="card-header">
+												<h5>Revisions</h5>
+											</div>
+											<div class="card-body">
+												<div class="taskboard-right-revision user-box">
+													<div class="media">
+														<div class="media-left mr-3">
+															<a class="btn waves-effect waves-light btn-outline-primary btn-icon" href="#!" role="button"><i class="fas fa-user-secret"></i>
+															</a>
+														</div>
+														<div class="media-body">
+															<div class="chat-header f-w-400 mb-1">Drop the IE specific hacks for temporal inputs</div>
+															<p class="chat-header text-muted">4 minutes ago</p>
+														</div>
+													</div>
+													<div class="media">
+														<div class="media-left mr-3">
+															<a class="btn waves-effect waves-light btn-outline-danger btn-icon" href="#!" role="button"><i class="fas fa-anchor"></i>
+															</a>
+														</div>
+														<div class="media-body">
+															<div class="chat-header f-w-400 mb-1">Add full font overrides for popovers and tooltips</div>
+															<p class="chat-header text-muted">36 minutes ago</p>
+														</div>
+													</div>
+													<div class="media">
+														<div class="media-left mr-3">
+															<a class="btn waves-effect waves-light btn-outline-warning btn-icon" href="#!" role="button"><i class="fas fa-desktop"></i>
+															</a>
+														</div>
+														<div class="media-body">
+															<div class="chat-header f-w-400 mb-1">created a new Design branch</div>
+															<p class="chat-header text-muted">2 month ago</p>
+														</div>
+													</div>
+													<div class="media">
+														<div class="media-left mr-3">
+															<a class="btn waves-effect waves-light btn-outline-success btn-icon" href="#!" role="button"><i class="fas fa-briefcase"></i>
+															</a>
+														</div>
+														<div class="media-body">
+															<div class="chat-header">merged Master and Dev branches</div>
+															<p class="chat-header text-muted">6 month ago</p>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="card">
+											<div class="card-header">
+												<h5>Attached Files</h5>
+											</div>
+											<div class="card-body task-attachment">
+												<ul class="media-list p-0">
+													<li class="media d-flex m-b-15">
+														<div class="m-r-20 file-attach">
+															<i class="far fa-file-word f-28 text-muted"></i>
+														</div>
+														<div class="media-body">
+															<a href="#!" class="m-b-5 d-block text-secondary">Overdrew_scowled.doc</a>
+															<div class="text-muted">
+																<small>Size: 1.2Mb</small>
+																<small>
+																	Added by <a href="#!" class="text-secondary">Winnie</a>
+																</small>
+															</div>
+														</div>
+														<div class="float-right text-muted">
+															<i class="fas fa-download f-18"></i>
+														</div>
+													</li>
+													<li class="media d-flex m-b-15">
+														<div class="m-r-20 file-attach">
+															<i class="far fa-file-powerpoint f-28 text-muted"></i>
+														</div>
+														<div class="media-body">
+															<a href="#!" class="m-b-5 d-block text-secondary">And_less_maternally.pdf</a>
+															<div class="text-muted">
+																<small>Size: 0.11Mb</small>
+																<small>
+																	Added by <a href="#!" class="text-secondary">Eugene</a>
+																</small>
+															</div>
+														</div>
+														<div class="float-right text-muted">
+															<i class="fas fa-download f-18"></i>
+														</div>
+													</li>
+													<li class="media d-flex m-b-15">
+														<div class="m-r-20 file-attach">
+															<i class="far fa-file-pdf f-28 text-muted"></i>
+														</div>
+														<div class="media-body">
+															<a href="#!" class="m-b-5 d-block text-secondary">The_less_overslept.pdf</a>
+															<div class="text-muted">
+																<small>Size:5.9Mb</small>
+																<small>
+																	Added by <a href="#!" class="text-secondary">Natalie</a>
+																</small>
+															</div>
+														</div>
+														<div class="float-right text-muted">
+															<i class="fas fa-download f-18"></i>
+														</div>
+													</li>
+													<li class="media d-flex m-b-15">
+														<div class="m-r-20 file-attach">
+															<i class="far fa-file-excel f-28 text-muted"></i>
+														</div>
+														<div class="media-body">
+															<a href="#!" class="m-b-5 d-block text-secondary">Well_equitably.mov</a>
+															<div class="text-muted">
+																<small>Size:20.9Mb</small>
+																<small>
+																	Added by <a href="#!" class="text-secondary">Jenny</a>
+																</small>
+															</div>
+														</div>
+														<div class="float-right text-muted">
+															<i class="fas fa-download f-18"></i>
+														</div>
+													</li>
+												</ul>
+											</div>
+										</div>
+										<div class="card">
+											<div class="card-header">
+												<h5>Assigned Users</h5>
+											</div>
+											<div class="card-body user-box assign-user">
+												<div class="media">
+													<div class="media-left media-middle mr-3">
+														<a href="#!">
+															<img class="img-fluid img-radius" src="https://appsrv1-147a1.kxcdn.com/gradient-pro/images/user/avatar-1.jpg" alt="chat-user">
+														</a>
+													</div>
+													<div class="media-body">
+														<h6>Sortino media</h6>
+														<p>Software Engineer</p>
+													</div>
+													<div>
+														<a href="#!" class="text-muted"> <i class="icon-options-vertical"></i></a>
+													</div>
+												</div>
+												<div class="media">
+													<div class="media-left media-middle mr-3">
+														<a href="#!">
+															<img class="img-fluid img-radius" src="https://appsrv1-147a1.kxcdn.com/gradient-pro/images/user/avatar-2.jpg" alt="chat-user">
+														</a>
+													</div>
+													<div class="media-body">
+														<h6>Larry heading</h6>
+														<p>Web Designer</p>
+													</div>
+													<div>
+														<a href="#!" class="text-muted"> <i class="icon-options-vertical"></i></a>
+													</div>
+												</div>
+												<div class="media">
+													<div class="media-left media-middle mr-3">
+														<a href="#!">
+															<img class="img-fluid img-radius" src="https://appsrv1-147a1.kxcdn.com/gradient-pro/images/user/avatar-3.jpg" alt="chat-user">
+														</a>
+													</div>
+													<div class="media-body">
+														<h6>Mark</h6>
+														<p>Chief Financial Officer (CFO)</p>
+													</div>
+													<div>
+														<a href="#!" class="text-muted"> <i class="icon-options-vertical"></i></a>
+													</div>
+												</div>
+												<div class="media">
+													<div class="media-left media-middle mr-3">
+														<a href="#!">
+															<img class="img-fluid img-radius" src="https://appsrv1-147a1.kxcdn.com/gradient-pro/images/user/avatar-1.jpg" alt="chat-user">
+														</a>
+													</div>
+													<div class="media-body">
+														<h6>John Doe</h6>
+														<p>Senior Marketing Designer</p>
+													</div>
+													<div>
+														<a href="#!" class="text-muted"> <i class="icon-options-vertical"></i></a>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="col-md-8">
+										<h5>Basic properties :</h5>
+										<table class="table table-responsive invoice-table invoice-order table-borderless">
+											<tbody>
+												<tr>
+													<th>MD5 :</th>
+													<td>{{submission.md5 if submission.md5 else submission.md5_hash}}</td>
+												</tr>
+												<tr>
+													<th>SHA-1 :</th>
+													<td>
+														<span class="label label-warning">{{submission.sha1 if submission.sha1 else submission.sha1_hash}}</span>
+													</td>
+												</tr>
+												<tr>
+													<th>SHA-256 :</th>
+													<td>
+														<span class="label label-warning">{{submission.sha256 if submission.sha256 else submission.sha256_hash}}</span>
+													</td>
+												</tr>
+												<tr>
+													<th>File type :</th>
+													<td>
+														<span class="label label-warning"><div class="badge badge-primary">{{submission.type_tag if submission.type_tag else submission.file_type}}</div></span>
+													</td>
+												</tr>
+												{% if submission.magic %}
+													<tr>
+														<th>Magic :</th>
+														<td>
+															<span class="label label-warning">{{submission.magic}}</span>
+														</td>
+													</tr>
+												{% endif %}
+												{% if submission.packers %}
+													{% for packer in submission.packers %}
+														<tr>
+															<th>{{packer}} :</th>
+															<td>
+																<span class="label label-warning"> {{submission.packers[packer]}}</span>
+															</td>
+														</tr>
+													{% endfor %}
+												{% endif %}
+												{% if submission.detectiteasy %}
+													<tr>
+														<th>DetectItEasy :</th>
+														<td>
+															<span class="label label-warning px-1 border-report">{{submission.detectiteasy['filetype']}}</span>  <span class="label label-warning px-1">{{submission.detectiteasy['values'][0]['type']}}: {{submission.detectiteasy['values'][0]['name']}} ({{submission.detectiteasy['values'][0]['version']}})</span>
+														</td>
+													</tr>
+												{% endif %}
+												{% if submission.tags %}
+													<tr>
+														<th>Tags :</th>
+														<td>
+															{% for tag in submission.tags %}
+																{% if loop.index <= 4 %}
+																	<span class="label label-warning px-1 border-report"><div class="badge badge-secondary">{{tag}}</div></span>
+																{% endif %}
+															{% endfor %}
+														</td>
+													</tr>
+												{% endif %}
+											</tbody>
+										</table>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-sm-12">
+										<div class="table-responsive">
+											<table class="table invoice-detail-table">
+												<thead>
+													<tr class="thead-default">
+														<th>Description</th>
+														<th>Quantity</th>
+														<th>Amount</th>
+														<th>Total</th>
+													</tr>
+												</thead>
+												<tbody>
+													<tr>
+														<td>
+															<h6>Logo Design</h6>
+															<p class="m-0">lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt </p>
+														</td>
+														<td>6</td>
+														<td>$200.00</td>
+														<td>$1200.00</td>
+													</tr>
+													<tr>
+														<td>
+															<h6>Logo Design</h6>
+															<p class="m-0">lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt </p>
+														</td>
+														<td>7</td>
+														<td>$100.00</td>
+														<td>$700.00</td>
+													</tr>
+													<tr>
+														<td>
+															<h6>Logo Design</h6>
+															<p class="m-0">lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt </p>
+														</td>
+														<td>5</td>
+														<td>$150.00</td>
+														<td>$750.00</td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-sm-12">
+										<table class="table table-responsive invoice-table invoice-total">
+											<tbody>
+												<tr>
+													<th>Sub Total :</th>
+													<td>$4725.00</td>
+												</tr>
+												<tr>
+													<th>Taxes (10%) :</th>
+													<td>$57.00</td>
+												</tr>
+												<tr>
+													<th>Discount (5%) :</th>
+													<td>$45.00</td>
+												</tr>
+												<tr class="text-info">
+													<td>
+														<hr>
+														<h5 class="text-primary m-r-10">Total :</h5>
+													</td>
+													<td>
+														<hr>
+														<h5 class="text-primary">$ 4827.00</h5>
+													</td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-sm-12">
+										<h6>Terms and Condition :</h6>
+										<p>lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+											laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="row text-center">
+							<div class="col-sm-12 invoice-btn-group text-center">
+								<button type="button" class="btn waves-effect waves-light btn-primary btn-print-invoice m-b-10">Print</button>
+								<button type="button" class="btn waves-effect waves-light btn-secondary m-b-10 ">Cancel</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- [ Invoice ] end -->
+				{% endif %}
+			</div>
+			<!-- [ Main Content ] end -->
+		</div>
+	</section>
+    <!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+{% endblock javascripts %}
