@@ -110,7 +110,6 @@ class URLIP(db.Model):
     case_name = db.Column(db.String(100), nullable=True)
     url = db.Column(db.String(255), nullable=True)
     ip = db.Column(db.String(255), nullable=True)
-    type = db.Column(db.String(100), nullable=True)
     malicious = db.Column(db.Integer, nullable=True)
     scan_status = db.Column(db.String(100), nullable=True)
     data_type = db.Column(db.String(100), nullable=True)

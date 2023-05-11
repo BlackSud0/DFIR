@@ -59,9 +59,13 @@ def hash_scan(hash, APIKey):
 
 def urlip_scan(urlip, data_type, APIKey):
     result = virustotal(urlip, data_type, APIKey)
+    if hasattr(result, 'code'):
+        result = virustotal(urlip, data_type, APIKey, scan=True)
+        if not hasattr(result, 'code'):
+            result = virustotal(result, "analysis", APIKey)
     return result
 
-def virustotal(data, data_type, APIKey, filename='unknown'):
+def virustotal(data, data_type, APIKey, filename='unknown', scan=False):
     if APIKey.VTAPI:
         with vt.Client(APIKey.VTAPI) as client:
             try:
@@ -78,14 +82,13 @@ def virustotal(data, data_type, APIKey, filename='unknown'):
                     return file_hash
                 
                 elif data_type == "url":
-                    url_id = vt.url_id(data)
-                    # Get a URL analysis report: Returns a URL object.
-                    url = client.get_object("/urls/{}", url_id)
-                    if hasattr(url, 'code'):
-                        # Scan URL: Returns a URL object.
+                    # Scan URL: Returns a URL object.
+                    if scan:
                         url = client.scan_url(data)
-                        if not hasattr(url, 'code'):
-                            url = client.get_object("/analyses/{}", url.id)
+                    else:
+                        # Get a URL analysis report: Returns a URL object.
+                        url_id = vt.url_id(data)
+                        url = client.get_object("/urls/{}", url_id)
                     return url
                 
                 elif data_type == "ip":

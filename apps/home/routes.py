@@ -9,7 +9,7 @@ from apps.home import blueprint
 from flask import request, render_template, redirect, url_for
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
-from apps.authentication.models import Cases, APIs, FileHash
+from apps.authentication.models import Cases, APIs, FileHash, URLIP
 from apps.home.forms import CreateCaseForm, CreateSettingsForm, SubmissionForm
 from apps.home.utils import file_scan, hash_scan, urlip_scan, hashid, PyJSON
 
@@ -191,15 +191,34 @@ def cases(case_id):
                 data_type = "url"
             else:
                 data_type = "ip"
-
             result = urlip_scan(urlip, data_type, APIKey)
 
-            return render_template(
+            if hasattr(result, 'code'):
+                return render_template(
                 "home/case.html",
                 case=case,
                 form=submission_form,
-                result=result
-            )
+                error=result
+                )
+            else:
+                submission = URLIP(user_id=current_user.get_id(), case_id=case.id)
+                submission.case_name = case.case_name
+                submission.data_type = data_type
+                submission.url = urlip if data_type == "url" else None
+                submission.ip = urlip if data_type == "ip" else None
+                submission.analysis_id = result.id if hasattr(result, 'id') else None
+                submission.malicious = result.stats['malicious'] if hasattr(result, 'stats') else result.total_votes['malicious']
+                submission.scan_status = result.status if hasattr(result, 'status') else "completed"
+                
+                
+                db.session.add(submission)
+                db.session.commit()
+                return render_template(
+                    "home/case.html",
+                    case=case,
+                    form=submission_form,
+                    result=result
+                )
         
         elif 'submit_pcap' in request.form:
             return render_template(
