@@ -295,6 +295,48 @@ def filehash_report(submission_id):
             )
     return redirect(url_for('home_blueprint.submissions'))
 
+@blueprint.route('/submission/urlip/delete/<int:submission_id>')
+@login_required
+def delete_urlip(submission_id):
+    submission = URLIP.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
+    # Admins should not be able to delete themselves
+    if submission:
+        URLIP.query.filter_by(id=submission_id).delete()
+        db.session.commit()
+        filehash = FileHash.query.filter_by(user_id=current_user.get_id()).order_by(FileHash.id.desc())
+        urls = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='url').order_by(URLIP.id.desc())
+        ips = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='ip').order_by(URLIP.id.desc())
+        return render_template(
+            "home/submissions.html", 
+            msg='Submission deleted successfully!', 
+            FileHash=filehash,
+            urls=urls,
+            ips=ips
+        )
+    return redirect(url_for('home_blueprint.submissions'))
+
+@blueprint.route('/reports/urlip/<int:submission_id>')
+@login_required
+def urlip_report(submission_id):
+    submission = URLIP.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
+    APIKey = APIs.query.filter_by(user_id=current_user.get_id()).first()
+    # Admins should not be able to delete themselves
+    if submission:
+        urlip = getattr(submission, submission.data_type, None)
+        result = urlip_scan(urlip, submission.data_type, APIKey)
+        if hasattr(result, 'code'):
+            return render_template(
+            "home/urlip-report.html",
+            error=result
+            )
+        else:
+            return render_template(
+                "home/urlip-report.html",
+                properties=submission,
+                submission=result
+            )
+    return redirect(url_for('home_blueprint.submissions'))
+
 @blueprint.route('/allcases')
 @login_required
 def allcases():
@@ -305,7 +347,9 @@ def allcases():
 @login_required
 def submissions():
     filehash = FileHash.query.filter_by(user_id=current_user.get_id()).order_by(FileHash.id.desc())
-    return render_template("home/submissions.html", FileHash=filehash)
+    urls = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='url').order_by(URLIP.id.desc())
+    ips = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='ip').order_by(URLIP.id.desc())
+    return render_template("home/submissions.html", FileHash=filehash, urls=urls, ips=ips)
 
 @blueprint.route('/settings', methods=['GET', 'POST'])
 @login_required
