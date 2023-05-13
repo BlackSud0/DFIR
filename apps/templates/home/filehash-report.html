@@ -321,8 +321,8 @@
 																{{name | truncate(70)}}
 															</td>
 															<td class="text-right py-2">
-																<a href="javascript:;" data-toggle="tooltip" data-placement="top" title="Downloads">
-																	<i class="fas fa-download f-20"></i>
+																<a href="{{ url_for('home_blueprint.download_file',submission_id=properties.id) if malbazaar.sha256_hash else 'javascript:;'}}" data-toggle="tooltip" data-placement="top" title="Downloads">
+																	<i class="fas fa-download {% if malbazaar.sha256_hash %}text-primary{% else %}text-muted disabled{% endif %} f-20"></i>
 																</a>
 															</td>
 														</tr>
@@ -343,12 +343,12 @@
 								</div>
 							</div>
 						</div>
-						<div class="row text-center">
+						<!-- <div class="row text-center">
 							<div class="col-sm-12 invoice-btn-group text-center">
 								<button type="button" class="btn waves-effect waves-light btn-primary btn-print-invoice m-b-10">Print</button>
 								<button type="button" class="btn waves-effect waves-light btn-secondary m-b-10 ">Cancel</button>
 							</div>
-						</div>
+						</div> -->
 					</div>
 				</div>
 				<!-- [ Invoice ] end -->

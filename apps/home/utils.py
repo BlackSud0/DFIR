@@ -54,7 +54,7 @@ def file_scan(file, APIKey, filename, sha256):
 def hash_scan(hash, APIKey):
     result = virustotal(hash, "hash", APIKey)
     if hasattr(result, 'code'):
-        result = malwarebazaar(hash, APIKey)
+        result = malwarebazaar(hash, "hash", APIKey)
     return result
 
 def urlip_scan(urlip, data_type, APIKey):
@@ -110,17 +110,22 @@ def virustotal(data, data_type, APIKey, filename='unknown', scan=False):
         result = PyJSON({'code': 'VirusTotalError', 'message': 'API key can not be an empty string.'})
         return result
     
-def malwarebazaar(hash, APIKey):
+def malwarebazaar(hash, data_type, APIKey):
     if APIKey.MBAPI:
         try:
             bz = Bazaar(api_key=APIKey.MBAPI)
-            response = bz.query_hash(hash)
-            if response.get('query_status') == "ok":
-                result = PyJSON(response["data"][0])
-                return result
-            else:
-                result = PyJSON({'code': 'HashQueryError', 'message': f'No matches found => {response["query_status"]}'})
-                return result
+            if data_type == "hash":
+                response = bz.query_hash(hash)
+                if response.get('query_status') == "ok":
+                    result = PyJSON(response["data"][0])
+                    return result
+                else:
+                    result = PyJSON({'code': 'HashQueryError', 'message': f'No matches found => {response["query_status"]}'})
+                    return result
+            elif data_type == "download":
+                # create download function for download files
+                content = bz.download_file(hash)
+                return io.BytesIO(content)
         except requests.exceptions.ConnectionError as ex:
             return PyJSON({'code': 'No Internet Connection', 'message': "Please check your internet connection and try again"})
     else:

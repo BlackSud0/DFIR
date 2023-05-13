@@ -3,10 +3,10 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-import re, json
+import re
 from apps import db
 from apps.home import blueprint
-from flask import request, render_template, redirect, url_for
+from flask import request, render_template, send_file, redirect, url_for
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.authentication.models import Cases, APIs, FileHash, URLIP
@@ -281,7 +281,7 @@ def filehash_report(submission_id):
     # Admins should not be able to delete themselves
     if submission:
         result = hash_scan(submission.sha256, APIKey)
-        malbazaar = malwarebazaar(submission.sha256, APIKey)
+        malbazaar = malwarebazaar(submission.sha256, "hash", APIKey)
         if hasattr(result, 'code'):
             return render_template(
             "home/filehash-report.html",
@@ -295,6 +295,14 @@ def filehash_report(submission_id):
                 malbazaar=malbazaar
             )
     return redirect(url_for('home_blueprint.submissions'))
+
+@blueprint.route('/download/filehash/<int:submission_id>')
+@login_required
+def download_file(submission_id):
+    submission = FileHash.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
+    APIKey = APIs.query.filter_by(user_id=current_user.get_id()).first()
+    content = malwarebazaar(submission.sha256, "download", APIKey)
+    return send_file(content, attachment_filename=f"{submission.file_name}.zip", as_attachment=True)
 
 @blueprint.route('/submission/urlip/delete/<int:submission_id>')
 @login_required
