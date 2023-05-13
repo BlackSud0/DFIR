@@ -116,7 +116,7 @@ def malwarebazaar(hash, APIKey):
             bz = Bazaar(api_key=APIKey.MBAPI)
             response = bz.query_hash(hash)
             if response.get('query_status') == "ok":
-                result = response["data"][0] #PyJSON(response["data"][0])
+                result = PyJSON(response["data"][0])
                 return result
             else:
                 result = PyJSON({'code': 'HashQueryError', 'message': f'No matches found => {response["query_status"]}'})

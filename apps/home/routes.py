@@ -11,7 +11,7 @@ from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 from apps.authentication.models import Cases, APIs, FileHash, URLIP
 from apps.home.forms import CreateCaseForm, CreateSettingsForm, SubmissionForm
-from apps.home.utils import file_scan, hash_scan, urlip_scan, hashid, PyJSON
+from apps.home.utils import file_scan, hash_scan, urlip_scan, malwarebazaar, hashid, PyJSON
 
 
 @blueprint.route('/index')
@@ -160,7 +160,7 @@ def cases(case_id):
                     submission = FileHash(user_id=current_user.get_id(), case_id=case.id)
                     submission.case_name = case.case_name
                     submission.priority = case.case_priority
-                    submission.file_name = json.dumps(result.names) if hasattr(result, 'names') else result.file_name #"unknown" # result.file_name # filename
+                    submission.file_name = result.names[0] if hasattr(result, 'names') else result.file_name
                     submission.data_type = "hash"
                     submission.sha256 = result.sha256 if hasattr(result, 'sha256') else result.sha256_hash
                     submission.sha1 = result.sha1 if hasattr(result, 'sha1') else result.sha1_hash
@@ -282,6 +282,7 @@ def filehash_report(submission_id):
     # Admins should not be able to delete themselves
     if submission:
         result = hash_scan(submission.sha256, APIKey)
+        malbazaar = malwarebazaar(submission.sha256, APIKey)
         if hasattr(result, 'code'):
             return render_template(
             "home/filehash-report.html",
@@ -291,7 +292,8 @@ def filehash_report(submission_id):
             return render_template(
                 "home/filehash-report.html",
                 properties=submission,
-                submission=result
+                submission=result,
+                malbazaar=malbazaar
             )
     return redirect(url_for('home_blueprint.submissions'))
 
