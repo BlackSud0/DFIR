@@ -211,9 +211,8 @@ def cases(case_id):
                 submission.url = urlip if data_type == "url" else None
                 submission.ip = urlip if data_type == "ip" else None
                 submission.analysis_id = result.id if hasattr(result, 'id') else None
-                submission.malicious = result.stats['malicious'] if hasattr(result, 'stats') else result.total_votes['malicious']
+                submission.malicious = result.last_analysis_stats['malicious'] if hasattr(result, 'stats') else result.total_votes['malicious']
                 submission.scan_status = result.status if hasattr(result, 'status') else "completed"
-                
                 
                 db.session.add(submission)
                 db.session.commit()

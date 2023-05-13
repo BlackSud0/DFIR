@@ -1,6 +1,6 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Total Cases {% endblock %} 
+{% block title %} FileHahs Report {% endblock %} 
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}
@@ -107,7 +107,7 @@
 														</tr>
 														<tr>
 															<td><i class="far fa-calendar-alt m-r-5"></i> Updated:</td>
-															<td class="text-right">{{submission.first_submission_date if submission.first_submission_date else submission.first_seen}}</td>
+															<td class="text-right">{{submission.last_modification_date if submission.last_modification_date else submission.last_seen}}</td>
 														</tr>
 														<tr>
 															<td><i class="fas fa-chart-line m-r-5"></i> Priority:</td>
