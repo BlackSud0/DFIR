@@ -242,7 +242,7 @@ def cases(case_id):
         elif 'submit_pcap' in request.form:
             if case.virustotal:
                 directory = "apps/uploads/pcaps/"
-                if 'pcap' in request.files and request.files['pcap'].filename != "" and request.files['pcap'].mimetype == "application/vnd.tcpdump.pcap":
+                if 'pcap' in request.files and request.files['pcap'].filename != "": #  and request.files['pcap'].mimetype == "application/vnd.tcpdump.pcap"
 
                     file = request.files['pcap']
                     filename = file.filename
@@ -260,7 +260,7 @@ def cases(case_id):
                         error=packet
                         )
                     else:
-                        submission_ids = []
+                        submission_count = []
                         for pack in packet.indicators:
                             if pack['type'] == 'url' or pack['type'] == 'ip':
                                 result = urlip_scan(pack['value'], pack['type'], APIKey)
@@ -280,27 +280,34 @@ def cases(case_id):
                                         submission.scan_status = result.status if hasattr(result, 'status') else "completed"
                                         db.session.add(submission)
                                         db.session.commit()
-                                        submission_ids.append(submission.id)
+                                        submission_count.append(submission.id)
                             else:
                                 pass
+                        if len(submission_count) != 0:
+                            packs = PCAPS(user_id=current_user.get_id(), case_id=case.id)
+                            packs.case_name = case.case_name
+                            packs.file_name = filename
+                            packs.priority = case.case_priority
+                            packs.data_type = "pcap"
+                            packs.malicious = len(submission_count)
+                            packs.submission_ids = json.dumps(submission_count)
+                            packs.scan_status = "completed"
+                            db.session.add(packs)
+                            db.session.commit()
                             
-                        packs = PCAPS(user_id=current_user.get_id(), case_id=case.id)
-                        packs.case_name = case.case_name
-                        packs.file_name = filename
-                        packs.priority = case.case_priority
-                        packs.data_type = "pcap"
-                        packs.malicious = submission_ids.count()
-                        packs.submission_ids = json.dumps(submission_ids)
-                        packs.scan_status = "completed"
-                        db.session.add(packs)
-                        db.session.commit()
-                        
-                        return render_template(
-                            "home/case.html",
-                            case=case,
-                            form=submission_form,
-                            result="Pcap file analyzed successfuly you can view [url, ip] submissions"
-                        )
+                            return render_template(
+                                "home/case.html",
+                                case=case,
+                                form=submission_form,
+                                result="Pcap file analyzed successfuly you can view [url, ip] submissions"
+                            )
+                        else:
+                            return render_template(
+                                "home/case.html",
+                                case=case,
+                                form=submission_form,
+                                error=PyJSON({'code': 'PcapError', 'message': 'No malicious indicators in this PCAP file.'})
+                            )
                 else:
                     return render_template(
                         "home/case.html",
