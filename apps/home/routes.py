@@ -3,23 +3,26 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-import re
+import re, os, json
 from apps import db
 from apps.home import blueprint
 from flask import request, render_template, send_file, redirect, url_for
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
-from apps.authentication.models import Cases, APIs, FileHash, URLIP
+from apps.authentication.models import Cases, APIs, FileHash, URLIP, PCAPS
 from apps.home.forms import CreateCaseForm, CreateSettingsForm, SubmissionForm
 from apps.home.utils import file_scan, hash_scan, urlip_scan, malwarebazaar, hashid, PyJSON
-
+from apps.home.pcap import Pcap
+from werkzeug.utils import secure_filename
 
 @blueprint.route('/index')
 @login_required
 def index():
+    filehash = FileHash.query.filter_by(user_id=current_user.get_id()).order_by(FileHash.id.desc())
+    urls = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='url').order_by(URLIP.id.desc())
+    ips = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='ip').order_by(URLIP.id.desc())
     cases_count = Cases.query.count()
-    return render_template('home/index.html', cases_count=cases_count, segment='index')
-
+    return render_template('home/index.html', cases_count=cases_count, FileHash=filehash, urls=urls, ips=ips, segment='index')
 
 @blueprint.route('/<template>')
 @login_required
@@ -84,6 +87,12 @@ def cases(case_id):
     case = Cases.query.filter_by(id=case_id, user_id=current_user.get_id()).first_or_404()
     submission_form = SubmissionForm(request.form)
     APIKey = APIs.query.filter_by(user_id=current_user.get_id()).first()
+    file_count = FileHash.query.filter_by(case_id=case_id, user_id=current_user.get_id(), data_type="file").count()
+    hash_count = FileHash.query.filter_by(case_id=case_id, user_id=current_user.get_id(), data_type="hash").count()
+    url_count = URLIP.query.filter_by(case_id=case_id, user_id=current_user.get_id(), data_type="url").count()
+    ip_count = URLIP.query.filter_by(case_id=case_id, user_id=current_user.get_id(), data_type="ip").count()
+    counter = PyJSON({'file': file_count, 'hash': hash_count, 'url': url_count, 'ip': ip_count})
+    case.counter = counter
 
     if request.method == "POST":
         if 'submit_file' in request.form:
@@ -188,47 +197,124 @@ def cases(case_id):
                 )
             
         elif 'submit_url' in request.form:
-            urlip = request.form.get('url')
-            url_pattern = "^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$"
-            if re.match(url_pattern, urlip):
-                data_type = "url"
-            else:
-                data_type = "ip"
-            result = urlip_scan(urlip, data_type, APIKey)
+            if case.virustotal:
+                urlip = request.form.get('url')
+                url_pattern = "^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$"
+                if re.match(url_pattern, urlip):
+                    data_type = "url"
+                else:
+                    data_type = "ip"
+                result = urlip_scan(urlip, data_type, APIKey)
 
-            if hasattr(result, 'code'):
-                return render_template(
-                "home/case.html",
-                case=case,
-                form=submission_form,
-                error=result
-                )
+                if hasattr(result, 'code'):
+                    return render_template(
+                    "home/case.html",
+                    case=case,
+                    form=submission_form,
+                    error=result
+                    )
+                else:
+                    submission = URLIP(user_id=current_user.get_id(), case_id=case.id)
+                    submission.case_name = case.case_name
+                    submission.priority = case.case_priority
+                    submission.data_type = data_type
+                    submission.url = urlip if data_type == "url" else None
+                    submission.ip = urlip if data_type == "ip" else None
+                    submission.analysis_id = result.id if hasattr(result, 'id') else None
+                    submission.malicious = result.last_analysis_stats['malicious'] if hasattr(result, 'last_analysis_stats') else result.stats['malicious']
+                    submission.scan_status = result.status if hasattr(result, 'status') else "completed"
+                    
+                    db.session.add(submission)
+                    db.session.commit()
+                    return render_template(
+                        "home/case.html",
+                        case=case,
+                        form=submission_form,
+                        result=result
+                    )
             else:
-                submission = URLIP(user_id=current_user.get_id(), case_id=case.id)
-                submission.case_name = case.case_name
-                submission.priority = case.case_priority
-                submission.data_type = data_type
-                submission.url = urlip if data_type == "url" else None
-                submission.ip = urlip if data_type == "ip" else None
-                submission.analysis_id = result.id if hasattr(result, 'id') else None
-                submission.malicious = result.last_analysis_stats['malicious'] if hasattr(result, 'last_analysis_stats') else result.stats['malicious']
-                submission.scan_status = result.status if hasattr(result, 'status') else "completed"
-                
-                db.session.add(submission)
-                db.session.commit()
                 return render_template(
                     "home/case.html",
                     case=case,
                     form=submission_form,
-                    result=result
+                    error=PyJSON({'code': 'SandboxError', 'message': 'Please enable Virustotal and try again.'})
                 )
-        
         elif 'submit_pcap' in request.form:
-            return render_template(
-                "home/case.html",
-                case=case,
-                form=submission_form,
-            )
+            if case.virustotal:
+                directory = "apps/uploads/pcaps/"
+                if 'pcap' in request.files and request.files['pcap'].filename != "" and request.files['pcap'].mimetype == "application/vnd.tcpdump.pcap":
+
+                    file = request.files['pcap']
+                    filename = file.filename
+                    if not os.path.exists(directory):
+                        os.makedirs(directory)
+                    fullpath = directory + secure_filename(filename)
+                    file.save(fullpath)
+
+                    packet = Pcap(fullpath)
+                    if hasattr(packet, 'code'):
+                        return render_template(
+                        "home/case.html",
+                        case=case,
+                        form=submission_form,
+                        error=packet
+                        )
+                    else:
+                        submission_ids = []
+                        for pack in packet.indicators:
+                            if pack['type'] == 'url' or pack['type'] == 'ip':
+                                result = urlip_scan(pack['value'], pack['type'], APIKey)
+                                if hasattr(result, 'code'):
+                                    pass
+                                else:
+                                    malicious = result.last_analysis_stats['malicious'] if hasattr(result, 'last_analysis_stats') else result.stats['malicious']
+                                    if malicious != 0 or hasattr(result, 'status'):
+                                        submission = URLIP(user_id=current_user.get_id(), case_id=case.id)
+                                        submission.case_name = case.case_name
+                                        submission.priority = case.case_priority
+                                        submission.data_type = pack['type']
+                                        submission.url = pack['value'] if pack['type'] == "url" else None
+                                        submission.ip = pack['value'] if pack['type'] == "ip" else None
+                                        submission.analysis_id = result.id if hasattr(result, 'id') else None
+                                        submission.malicious = malicious
+                                        submission.scan_status = result.status if hasattr(result, 'status') else "completed"
+                                        db.session.add(submission)
+                                        db.session.commit()
+                                        submission_ids.append(submission.id)
+                            else:
+                                pass
+                            
+                        packs = PCAPS(user_id=current_user.get_id(), case_id=case.id)
+                        packs.case_name = case.case_name
+                        packs.file_name = filename
+                        packs.priority = case.case_priority
+                        packs.data_type = "pcap"
+                        packs.malicious = submission_ids.count()
+                        packs.submission_ids = json.dumps(submission_ids)
+                        packs.scan_status = "completed"
+                        db.session.add(packs)
+                        db.session.commit()
+                        
+                        return render_template(
+                            "home/case.html",
+                            case=case,
+                            form=submission_form,
+                            result="Pcap file analyzed successfuly you can view [url, ip] submissions"
+                        )
+                else:
+                    return render_template(
+                        "home/case.html",
+                        case=case,
+                        form=submission_form,
+                        error=PyJSON({'code': 'FileSubmissionError', 'message': 'Please submit a valid request and use a valid file name.'})
+                    )
+            else:
+                    return render_template(
+                        "home/case.html",
+                        case=case,
+                        form=submission_form,
+                        error=PyJSON({'code': 'SandboxError', 'message': 'Please enable Virustotal and try again.'})
+                    )
     else:
         return render_template(
             "home/case.html",
@@ -243,7 +329,7 @@ def delete_case(case_id):
     # Admins should not be able to delete themselves
     if case:
         # Notifications.query.filter_by(user_id=user_id).delete()
-        # Awards.query.filter_by(user_id=user_id).delete()
+        URLIP.query.filter_by(case_id=case_id).delete()
         FileHash.query.filter_by(case_id=case_id).delete()
         Cases.query.filter_by(id=case_id).delete()
         db.session.commit()
@@ -358,7 +444,8 @@ def submissions():
     filehash = FileHash.query.filter_by(user_id=current_user.get_id()).order_by(FileHash.id.desc())
     urls = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='url').order_by(URLIP.id.desc())
     ips = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='ip').order_by(URLIP.id.desc())
-    return render_template("home/submissions.html", FileHash=filehash, urls=urls, ips=ips)
+    packets = PCAPS.query.filter_by(user_id=current_user.get_id()).order_by(PCAPS.id.desc())
+    return render_template("home/submissions.html", FileHash=filehash, urls=urls, ips=ips, packets=packets)
 
 @blueprint.route('/settings', methods=['GET', 'POST'])
 @login_required

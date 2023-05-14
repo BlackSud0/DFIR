@@ -285,184 +285,66 @@
                                     </div>
                                 </div>
                                 <div class="tab-pane fade" id="pills-news" role="tabpanel" aria-labelledby="pills-news-tab">
-                                    <div class="table-responsive">
-                                        <div class="customer-scroll" style="height:362px;position:relative;">
-                                            <table class="table table-hover m-b-0">
-                                                <thead>
-                                                    <tr>
-                                                        <th><span>Date</span></th>
-                                                        <th><span>Case Name <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
-                                                        <th><span>Type <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
-                                                        <th><span>Signature <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
-                                                        <th><span>Tags <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
-                                                        <th class="text-center"><span>Actions <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>8-11-2016</td>
-                                                        <td>
-                                                            Dummy Case name
-                                                        </td>
-                                                        <td>
-                                                            exe
-                                                        </td>
-                                                        <td>
-                                                            
-                                                        </td>
-                                                        <td>
-                                                            <div class="badge badge-light-danger">
-                                                                trojan
+                                    <div class="dt-responsive table-responsive">
+                                        <table id="all-ip-table" class="table table-hover m-b-0">
+                                            <thead>
+                                                <tr>
+                                                    <th><span>Date</span></th>
+                                                    <th><span>indicators <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
+                                                    <th><span>Case Name <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
+                                                    <th><span>Submission <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
+                                                    <th><span>Type <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
+                                                    <th><span>Scan <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
+                                                    <th class="text-center"><span>Actions <a class="help" data-toggle="popover" title="Popover title" data-content="And here's some amazing content. It's very engaging. Right?"><i class="feather icon-help-circle f-16"></i></a></span></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for submission in packets %}
+                                                <tr>
+                                                    <td>{{ submission.created_at }}</td>
+                                                    <td>
+                                                        <div class="badge badge-light-danger">
+                                                            <i class="fa fa-bug m-r-3"></i>
+                                                            {{submission.submission_ids | count}}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ url_for('home_blueprint.cases',case_id=submission.case_id) }}">{{ submission.case_name }}</a>
+                                                    </td>
+                                                    <td data-toggle="tooltip" data-placement="top" title="{{submission.file_name}}">
+                                                        {{ submission.file_name | truncate(15) }}
+                                                    </td>
+                                                    <td>
+                                                        <div class="badge badge-primary">
+                                                            {{ submission.data_type }}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        {% if submission.scan_status == "completed" %}
+                                                            <div class="badge badge-light-success">
+                                                                Completed
                                                             </div>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <i class="feather icon-eye text-primary m-r-5 f-20"></i>
-                                                            <i class="feather icon-edit-2 text-success m-r-5 f-20"></i>
-                                                            <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
-                                                            <i class="feather icon-download-cloud m-r-5 f-20"></i>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>15-10-2016</td>
-                                                        <td>
-                                                            Dummy Case name
-                                                        </td>
-                                                        <td>
-                                                            exe
-                                                        </td>
-                                                        <td>
-                                                            AgentTesla
-                                                        </td>
-                                                        <td>
-                                                            <div class="badge badge-light-danger">
-                                                                trojan
+                                                        {% else %}
+                                                            <div class="badge badge-light-warning">
+                                                                Queued
                                                             </div>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <i class="feather icon-eye text-primary m-r-5 f-20"></i>
-                                                            <i class="feather icon-edit-2 text-success m-r-5 f-20"></i>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <a href="{{ url_for('home_blueprint.urlip_report',submission_id=submission.id) if submission.scan_status == 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="View Reports">
+                                                            <i class="feather icon-eye {% if submission.scan_status == 'completed' %}text-primary{% else %}text-muted disabled{% endif %} m-r-5 f-20"></i>
+                                                        </a>
+                                                        <a href="{{ url_for('home_blueprint.cases',case_id=submission.id) if submission.scan_status != 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="Refresh">
+                                                            <i class="feather icon-repeat {% if submission.scan_status == 'completed' %}text-muted disabled{% else %}text-success{% endif %} m-r-5 f-20"></i>
+                                                        </a>
+                                                        <a href="{{ url_for('home_blueprint.delete_urlip',submission_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Delete">
                                                             <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
-                                                            <i class="feather icon-download-cloud m-r-5 f-20"></i>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>8-8-2017</td>
-                                                        <td>
-                                                            Dummy Case name
-                                                        </td>
-                                                        <td>
-                                                            doc
-                                                        </td>
-                                                        <td>
-                                                            
-                                                        </td>
-                                                        <td>
-                                                            <div class="badge badge-light-danger">
-                                                                trojan
-                                                            </div>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <i class="feather icon-eye text-primary m-r-5 f-20"></i>
-                                                            <i class="feather icon-edit-2 text-success m-r-5 f-20"></i>
-                                                            <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
-                                                            <i class="feather icon-download-cloud m-r-5 f-20"></i>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>11-12-2017</td>
-                                                        <td>
-                                                            Dummy Case name
-                                                        </td>
-                                                        <td>
-                                                            zip
-                                                        </td>
-                                                        <td>
-                                                            Mirai
-                                                        </td>
-                                                        <td>
-                                                            <div class="badge badge-light-danger">
-                                                                trojan
-                                                            </div>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <i class="feather icon-eye text-primary m-r-5 f-20"></i>
-                                                            <i class="feather icon-edit-2 text-success m-r-5 f-20"></i>
-                                                            <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
-                                                            <i class="feather icon-download-cloud m-r-5 f-20"></i>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>1-6-2015</td>
-                                                        <td>
-                                                            Dummy Case name
-                                                        </td>
-                                                        <td>
-                                                            bat
-                                                        </td>
-                                                        <td>
-                                                            
-                                                        </td>
-                                                        <td>
-                                                            <div class="badge badge-light-danger">
-                                                                trojan
-                                                            </div>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <i class="feather icon-eye text-primary m-r-5 f-20"></i>
-                                                            <i class="feather icon-edit-2 text-success m-r-5 f-20"></i>
-                                                            <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
-                                                            <i class="feather icon-download-cloud m-r-5 f-20"></i>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>8-11-2016</td>
-                                                        <td>
-                                                            Dummy Case name
-                                                        </td>
-                                                        <td>
-                                                            ps1
-                                                        </td>
-                                                        <td>
-                                                            Loki
-                                                        </td>
-                                                        <td>
-                                                            <div class="badge badge-light-danger">
-                                                                trojan
-                                                            </div>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <i class="feather icon-eye text-primary m-r-5 f-20"></i>
-                                                            <i class="feather icon-edit-2 text-success m-r-5 f-20"></i>
-                                                            <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
-                                                            <i class="feather icon-download-cloud m-r-5 f-20"></i>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>15-10-2016</td>
-                                                        <td>
-                                                            Dummy Case name
-                                                        </td>
-                                                        <td>
-                                                            exe
-                                                        </td>
-                                                        <td>
-                                                            AgentTesla
-                                                        </td>
-                                                        <td>
-                                                            <div class="badge badge-light-danger">
-                                                                trojan
-                                                            </div>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <i class="feather icon-eye text-primary m-r-5 f-20"></i>
-                                                            <i class="feather icon-edit-2 text-success m-r-5 f-20"></i>
-                                                            <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
-                                                            <i class="feather icon-download-cloud m-r-5 f-20"></i>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -492,6 +374,9 @@
             order: [[0, 'desc']],
         });
         $('#all-ip-table').DataTable({
+            order: [[0, 'desc']],
+        });
+        $('#all-pcap-table').DataTable({
             order: [[0, 'desc']],
         });
 	</script>

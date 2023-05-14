@@ -119,6 +119,25 @@ class URLIP(db.Model):
 
     def __repr__(self):
         return f'<URLIP {self.case_name}>'
+
+class PCAPS(db.Model):
+
+    __tablename__ = 'PCAPS'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    case_id = db.Column(db.Integer, nullable=False)
+    case_name = db.Column(db.String(100), nullable=True)
+    file_name = db.Column(db.String(100), nullable=True)
+    priority = db.Column(db.Integer, nullable=False)
+    submission_ids = db.Column(db.Text)
+    malicious = db.Column(db.Integer, nullable=True)
+    scan_status = db.Column(db.String(100), nullable=True)
+    data_type = db.Column(db.String(100), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True),server_default=db.func.now())
+
+    def __repr__(self):
+        return f'<PCAPS {self.file_name}>'
     
 @login_manager.user_loader
 def user_loader(id):
