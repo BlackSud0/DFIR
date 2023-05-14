@@ -21,8 +21,9 @@ def index():
     filehash = FileHash.query.filter_by(user_id=current_user.get_id()).order_by(FileHash.id.desc())
     urls = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='url').order_by(URLIP.id.desc())
     ips = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='ip').order_by(URLIP.id.desc())
+    packets = PCAPS.query.filter_by(user_id=current_user.get_id()).order_by(PCAPS.id.desc())
     cases_count = Cases.query.count()
-    return render_template('home/index.html', cases_count=cases_count, FileHash=filehash, urls=urls, ips=ips, segment='index')
+    return render_template('home/index.html', cases_count=cases_count, FileHash=filehash, urls=urls, ips=ips, packets=packets, segment='index')
 
 @blueprint.route('/<template>')
 @login_required
@@ -333,10 +334,9 @@ def cases(case_id):
 @login_required
 def delete_case(case_id):
     case = Cases.query.filter_by(id=case_id, user_id=current_user.get_id()).first_or_404()
-    # Admins should not be able to delete themselves
     if case:
-        # Notifications.query.filter_by(user_id=user_id).delete()
         URLIP.query.filter_by(case_id=case_id).delete()
+        PCAPS.query.filter_by(case_id=case_id).delete()
         FileHash.query.filter_by(case_id=case_id).delete()
         Cases.query.filter_by(id=case_id).delete()
         db.session.commit()
@@ -350,28 +350,44 @@ def delete_case(case_id):
     
     return redirect(url_for('home_blueprint.allcases'))
 
-@blueprint.route('/submission/filehash/delete/<int:submission_id>')
+@blueprint.route('/submission/delete/<string:type_id>/<int:submission_id>')
 @login_required
-def delete_filehash(submission_id):
-    submission = FileHash.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
-    # Admins should not be able to delete themselves
-    if submission:
-        FileHash.query.filter_by(id=submission_id).delete()
+def delete_submission(type_id,submission_id):
+    if type_id == 'filehash':
+        submission = FileHash.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
+        FileHash.query.filter_by(id=submission.id).delete()
         db.session.commit()
-        filehash = FileHash.query.filter_by(user_id=current_user.get_id()).order_by(FileHash.id.desc())
-        return render_template(
-            "home/submissions.html", 
-            msg='Submission deleted successfully!', 
-            FileHash=filehash
-        )
-    return redirect(url_for('home_blueprint.submissions'))
+    elif type_id == 'urlip':
+        submission = URLIP.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
+        URLIP.query.filter_by(id=submission.id).delete()
+        db.session.commit()
+    elif type_id == 'pcap':
+        submission = PCAPS.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
+        data_del = URLIP.query.filter(URLIP.id.in_(json.loads(submission.submission_ids))).all()
+        for data in data_del :
+            db.session.delete(data)
+        PCAPS.query.filter_by(id=submission.id).delete()
+        db.session.commit()
+
+    filehash = FileHash.query.filter_by(user_id=current_user.get_id()).order_by(FileHash.id.desc())
+    urls = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='url').order_by(URLIP.id.desc())
+    ips = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='ip').order_by(URLIP.id.desc())
+    packets = PCAPS.query.filter_by(user_id=current_user.get_id()).order_by(PCAPS.id.desc())
+    return render_template(
+        "home/submissions.html", 
+        msg='Submission deleted successfully!', 
+        FileHash=filehash,
+        urls=urls,
+        ips=ips,
+        packets=packets
+    )
+    # return redirect(url_for('home_blueprint.submissions'))
 
 @blueprint.route('/reports/filehash/<int:submission_id>')
 @login_required
 def filehash_report(submission_id):
     submission = FileHash.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
     APIKey = APIs.query.filter_by(user_id=current_user.get_id()).first()
-    # Admins should not be able to delete themselves
     if submission:
         result = hash_scan(submission.sha256, APIKey)
         malbazaar = malwarebazaar(submission.sha256, "hash", APIKey)
@@ -397,32 +413,11 @@ def download_file(submission_id):
     content = malwarebazaar(submission.sha256, "download", APIKey)
     return send_file(content, attachment_filename=f"{submission.file_name}.zip", as_attachment=True)
 
-@blueprint.route('/submission/urlip/delete/<int:submission_id>')
-@login_required
-def delete_urlip(submission_id):
-    submission = URLIP.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
-    # Admins should not be able to delete themselves
-    if submission:
-        URLIP.query.filter_by(id=submission_id).delete()
-        db.session.commit()
-        filehash = FileHash.query.filter_by(user_id=current_user.get_id()).order_by(FileHash.id.desc())
-        urls = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='url').order_by(URLIP.id.desc())
-        ips = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='ip').order_by(URLIP.id.desc())
-        return render_template(
-            "home/submissions.html", 
-            msg='Submission deleted successfully!', 
-            FileHash=filehash,
-            urls=urls,
-            ips=ips
-        )
-    return redirect(url_for('home_blueprint.submissions'))
-
 @blueprint.route('/reports/urlip/<int:submission_id>')
 @login_required
 def urlip_report(submission_id):
     submission = URLIP.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
     APIKey = APIs.query.filter_by(user_id=current_user.get_id()).first()
-    # Admins should not be able to delete themselves
     if submission:
         urlip = getattr(submission, submission.data_type, None)
         result = urlip_scan(urlip, submission.data_type, APIKey)
@@ -436,6 +431,19 @@ def urlip_report(submission_id):
                 "home/urlip-report.html",
                 properties=submission,
                 submission=result
+            )
+    return redirect(url_for('home_blueprint.submissions'))
+
+@blueprint.route('/reports/pcap/<int:submission_id>')
+@login_required
+def pcap_report(submission_id):
+    submission = PCAPS.query.filter_by(id=submission_id, user_id=current_user.get_id()).first_or_404()
+    result = URLIP.query.filter(URLIP.id.in_(json.loads(submission.submission_ids))).filter_by(user_id=current_user.get_id()).all()
+    if submission:
+        return render_template(
+            "home/pcap-report.html",
+            properties=submission,
+            result=result
             )
     return redirect(url_for('home_blueprint.submissions'))
 

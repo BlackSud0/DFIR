@@ -65,8 +65,6 @@ def urlip_scan(urlip, data_type, APIKey):
             result = virustotal(result, "analysis", APIKey)
     return result
 
-def pcap_scan(filepath):
-    pass
 def virustotal(data, data_type, APIKey, filename='unknown', scan=False):
     if APIKey.VTAPI:
         try:

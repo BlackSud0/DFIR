@@ -130,7 +130,7 @@
                                                         <a href="{{ url_for('home_blueprint.cases',case_id=submission.id) if submission.scan_status != 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="Refresh">
                                                             <i class="feather icon-repeat {% if submission.scan_status == 'completed' %}text-muted disabled{% else %}text-success{% endif %} m-r-5 f-20"></i>
                                                         </a>
-                                                        <a href="{{ url_for('home_blueprint.delete_filehash',submission_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Delete">
+                                                        <a href="{{ url_for('home_blueprint.delete_submission',type_id='filehash',submission_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Delete">
                                                             <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
                                                         </a>
                                                     </td>
@@ -202,7 +202,7 @@
                                                         <a href="{{ url_for('home_blueprint.cases',case_id=submission.id) if submission.scan_status != 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="Refresh">
                                                             <i class="feather icon-repeat {% if submission.scan_status == 'completed' %}text-muted disabled{% else %}text-success{% endif %} m-r-5 f-20"></i>
                                                         </a>
-                                                        <a href="{{ url_for('home_blueprint.delete_urlip',submission_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Delete">
+                                                        <a href="{{ url_for('home_blueprint.delete_submission',type_id='urlip',submission_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Delete">
                                                             <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
                                                         </a>
                                                     </td>
@@ -274,7 +274,7 @@
                                                         <a href="{{ url_for('home_blueprint.cases',case_id=submission.id) if submission.scan_status != 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="Refresh">
                                                             <i class="feather icon-repeat {% if submission.scan_status == 'completed' %}text-muted disabled{% else %}text-success{% endif %} m-r-5 f-20"></i>
                                                         </a>
-                                                        <a href="{{ url_for('home_blueprint.delete_urlip',submission_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Delete">
+                                                        <a href="{{ url_for('home_blueprint.delete_submission',type_id='urlip',submission_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Delete">
                                                             <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
                                                         </a>
                                                     </td>
@@ -300,48 +300,48 @@
                                             </thead>
                                             <tbody>
                                                 {% for submission in packets %}
-                                                <tr>
-                                                    <td>{{ submission.created_at }}</td>
-                                                    <td>
-                                                        <div class="badge badge-light-danger">
-                                                            <i class="fa fa-bug m-r-3"></i>
-                                                            {{submission.malicious}} malicious
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <a href="{{ url_for('home_blueprint.cases',case_id=submission.case_id) }}">{{ submission.case_name }}</a>
-                                                    </td>
-                                                    <td data-toggle="tooltip" data-placement="top" title="{{submission.file_name}}">
-                                                        {{ submission.file_name | truncate(15) }}
-                                                    </td>
-                                                    <td>
-                                                        <div class="badge badge-primary">
-                                                            {{ submission.data_type }}
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        {% if submission.scan_status == "completed" %}
-                                                            <div class="badge badge-light-success">
-                                                                Completed
+                                                    <tr>
+                                                        <td>{{ submission.created_at }}</td>
+                                                        <td>
+                                                            <div class="badge badge-light-danger">
+                                                                <i class="fa fa-bug m-r-3"></i>
+                                                                {{submission.malicious}} malicious
                                                             </div>
-                                                        {% else %}
-                                                            <div class="badge badge-light-warning">
-                                                                Queued
+                                                        </td>
+                                                        <td>
+                                                            <a href="{{ url_for('home_blueprint.cases',case_id=submission.case_id) }}">{{ submission.case_name }}</a>
+                                                        </td>
+                                                        <td data-toggle="tooltip" data-placement="top" title="{{submission.file_name}}">
+                                                            {{ submission.file_name | truncate(15) }}
+                                                        </td>
+                                                        <td>
+                                                            <div class="badge badge-primary">
+                                                                {{ submission.data_type }}
                                                             </div>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <a href="{{ url_for('home_blueprint.urlip_report',submission_id=submission.id) if submission.scan_status == 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="View Reports">
-                                                            <i class="feather icon-eye {% if submission.scan_status == 'completed' %}text-primary{% else %}text-muted disabled{% endif %} m-r-5 f-20"></i>
-                                                        </a>
-                                                        <a href="{{ url_for('home_blueprint.cases',case_id=submission.id) if submission.scan_status != 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="Refresh">
-                                                            <i class="feather icon-repeat {% if submission.scan_status == 'completed' %}text-muted disabled{% else %}text-success{% endif %} m-r-5 f-20"></i>
-                                                        </a>
-                                                        <a href="{{ url_for('home_blueprint.delete_urlip',submission_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Delete">
-                                                            <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
-                                                        </a>
-                                                    </td>
-                                                </tr>
+                                                        </td>
+                                                        <td>
+                                                            {% if submission.scan_status == "completed" %}
+                                                                <div class="badge badge-light-success">
+                                                                    Completed
+                                                                </div>
+                                                            {% else %}
+                                                                <div class="badge badge-light-warning">
+                                                                    Queued
+                                                                </div>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <a href="{{ url_for('home_blueprint.pcap_report',submission_id=submission.id) if submission.scan_status == 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="View Reports">
+                                                                <i class="feather icon-eye {% if submission.scan_status == 'completed' %}text-primary{% else %}text-muted disabled{% endif %} m-r-5 f-20"></i>
+                                                            </a>
+                                                            <a href="{{ url_for('home_blueprint.cases',case_id=submission.id) if submission.scan_status != 'completed' else 'javascript:;' }}" data-toggle="tooltip" data-placement="top" title="Refresh">
+                                                                <i class="feather icon-repeat {% if submission.scan_status == 'completed' %}text-muted disabled{% else %}text-success{% endif %} m-r-5 f-20"></i>
+                                                            </a>
+                                                            <a href="{{ url_for('home_blueprint.delete_submission',type_id='pcap',submission_id=submission.id) }}" data-toggle="tooltip" data-placement="top" title="Delete">
+                                                                <i class="feather icon-trash-2 text-danger m-r-5 f-20"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
                                                 {% endfor %}
                                             </tbody>
                                         </table>
