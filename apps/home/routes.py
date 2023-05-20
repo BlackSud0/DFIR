@@ -14,16 +14,18 @@ from apps.home.forms import CreateCaseForm, CreateSettingsForm, SubmissionForm
 from apps.home.utils import file_scan, hash_scan, urlip_scan, malwarebazaar, hashid, PyJSON
 from apps.home.pcap import Pcap
 from werkzeug.utils import secure_filename
+from psutil import virtual_memory
 
 @blueprint.route('/index')
 @login_required
 def index():
+    memory = virtual_memory().percent
     filehash = FileHash.query.filter_by(user_id=current_user.get_id()).order_by(FileHash.id.desc())
     urls = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='url').order_by(URLIP.id.desc())
     ips = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='ip').order_by(URLIP.id.desc())
     packets = PCAPS.query.filter_by(user_id=current_user.get_id()).order_by(PCAPS.id.desc())
     cases_count = Cases.query.count()
-    return render_template('home/index.html', cases_count=cases_count, FileHash=filehash, urls=urls, ips=ips, packets=packets, segment='index')
+    return render_template('home/index.html', cases_count=cases_count, FileHash=filehash, urls=urls, ips=ips, packets=packets, memory=memory, segment='index')
 
 @blueprint.route('/<template>')
 @login_required

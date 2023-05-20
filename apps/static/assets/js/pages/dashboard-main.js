@@ -258,7 +258,7 @@ function floatchart() {
                 y: {
                     title: {
                         formatter: function(seriesName) {
-                            return 'Ticket '
+                            return 'Memory '
                         }
                     }
                 },
