@@ -381,7 +381,6 @@ def delete_submission(type_id,submission_id):
         ips=ips,
         packets=packets
     )
-    # return redirect(url_for('home_blueprint.submissions'))
 
 @blueprint.route('/reports/filehash/<int:submission_id>')
 @login_required

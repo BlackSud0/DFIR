@@ -18,7 +18,7 @@ malwarebazaar==0.2.2
 vt-py==0.17.5
 OTXv2==1.5.12
 pyshark==0.4.2.2
-IPy
-# IPy==0.83
+IPy==0.83
+# IPy
 # psycopg2-binary
 
