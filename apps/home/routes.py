@@ -24,7 +24,7 @@ def index():
     urls = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='url').order_by(URLIP.id.desc())
     ips = URLIP.query.filter_by(user_id=current_user.get_id(), data_type='ip').order_by(URLIP.id.desc())
     packets = PCAPS.query.filter_by(user_id=current_user.get_id()).order_by(PCAPS.id.desc())
-    cases_count = Cases.query.count()
+    cases_count = Cases.query.filter_by(user_id=current_user.get_id()).count()
     return render_template('home/index.html', cases_count=cases_count, FileHash=filehash, urls=urls, ips=ips, packets=packets, memory=memory, segment='index')
 
 @blueprint.route('/<template>')
