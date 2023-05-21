@@ -2,12 +2,10 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
-from dotenv import load_dotenv
 import os, random, string
 
 class Config(object):
     
-    load_dotenv()
     basedir = os.path.abspath(os.path.dirname(__file__))
 
     # Assets Management

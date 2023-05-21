@@ -4,6 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 import os
+from dotenv import load_dotenv
 from   flask_migrate import Migrate
 from   flask_minify  import Minify
 from   sys import exit
@@ -38,4 +39,5 @@ if DEBUG:
     app.logger.info('ASSETS_ROOT      = ' + app_config.ASSETS_ROOT )
 
 if __name__ == "__main__":
+    load_dotenv()
     app.run(host='0.0.0.0')
