@@ -12,6 +12,8 @@ from   sys import exit
 from apps.config import config_dict
 from apps import create_app, db
 
+load_dotenv(override=True)
+
 # WARNING: Don't run with debug turned on in production!
 DEBUG = (os.getenv('DEBUG', 'False') == 'True')
 
@@ -39,5 +41,4 @@ if DEBUG:
     app.logger.info('ASSETS_ROOT      = ' + app_config.ASSETS_ROOT )
 
 if __name__ == "__main__":
-    load_dotenv()
     app.run(host='0.0.0.0')
