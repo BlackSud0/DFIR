@@ -244,7 +244,7 @@ def cases(case_id):
                 )
         elif 'submit_pcap' in request.form:
             if case.virustotal:
-                directory = "apps/uploads/pcaps/"
+                directory = os.getcwd() + "/apps/uploads/pcaps/"
                 if 'pcap' in request.files and request.files['pcap'].filename != "": #  and request.files['pcap'].mimetype == "application/vnd.tcpdump.pcap"
 
                     file = request.files['pcap']
